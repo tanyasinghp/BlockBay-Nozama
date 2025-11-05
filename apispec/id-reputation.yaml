@@ -1,0 +1,732 @@
+openapi: 3.0.3
+info:
+  title: Identity & Reputation API
+  version: 1.0.0
+  description: |
+    Decentralized Identity (DID) and Reputation microservice for the marketplace.
+    Manages decentralized identifiers (DIDs), on-chain verification metadata, ratings,
+    aggregated reputation scores and exposes endpoints for other services (Orders, Listings, Escrow)
+    to query and submit ratings/trust updates. Designed to integrate with the Listing, Search and Order services.
+  contact:
+    name: API Support
+    email: support@decentral-ecom.io
+
+servers:
+  - url: https://api.decentral-ecom.io/identity/v1
+    description: Production server
+  - url: http://localhost:3004/api/v1
+    description: Local development server
+
+tags:
+  - name: Identity
+    description: CRUD and verification operations for DIDs and user identity profiles.
+  - name: Reputation
+    description: Ratings, trust scores and aggregated reputation endpoints.
+  - name: Sync
+    description: Blockchain event sync / backfill and admin operations.
+  - name: Webhooks
+    description: Outgoing events delivered to other services.
+
+security:
+  - bearerAuth: []
+
+paths:
+  /identities:
+    post:
+      tags: [Identity]
+      summary: Create a new identity (DID)
+      description: Register a new decentralized identity profile. The service will store profile metadata off-chain and may optionally register verification on-chain via the Reputation smart contract.
+      operationId: createIdentity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IdentityCreateRequest'
+      responses:
+        '201':
+          description: Identity created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Identity'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Identity already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    get:
+      tags: [Identity]
+      summary: List identities
+      description: List identities with optional filters (address, name, verified) and pagination. Used by admin and search indexing processes.
+      operationId: listIdentities
+      parameters:
+        - name: address
+          in: query
+          schema:
+            type: string
+          description: Filter by wallet address
+        - name: did
+          in: query
+          schema:
+            type: string
+          description: Filter by DID
+        - name: name
+          in: query
+          schema:
+            type: string
+          description: Filter by display name (partial match)
+        - name: verified
+          in: query
+          schema:
+            type: boolean
+          description: Filter only blockchain-verified identities
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        '200':
+          description: Paginated list of identities
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityList'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /identities/{did}:
+    get:
+      tags: [Identity]
+      summary: Get identity by DID
+      operationId: getIdentity
+      parameters:
+        - name: did
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Identity retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Identity'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Identity]
+      summary: Update identity metadata
+      operationId: updateIdentity
+      parameters:
+        - name: did
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IdentityUpdateRequest'
+      responses:
+        '200':
+          description: Identity updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Identity'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Identity]
+      summary: Delete identity (soft-delete)
+      description: Performs soft-delete of identity profile. On-chain records are immutable; this only affects off-chain metadata and indexing.
+      operationId: deleteIdentity
+      parameters:
+        - name: did
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Identity soft-deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /identities/{did}/verify:
+    post:
+      tags: [Identity]
+      summary: Submit or refresh on-chain verification
+      description: Triggers a verification transaction or records on-chain verification metadata. Usually used after off-chain KYC or other checks. The service may return a suggested transaction payload if it cannot sign on behalf of the user.
+      operationId: verifyIdentity
+      parameters:
+        - name: did
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                method:
+                  type: string
+                  description: "verification method (e.g., 'onchain', 'manual')"
+                  example: "onchain"
+                verifier:
+                  type: string
+                  description: "Authority performing verification (admin operator or service)"
+              required: [method, verifier]
+      responses:
+        '200':
+          description: Verification recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Already verified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /reputation/{did}:
+    get:
+      tags: [Reputation]
+      summary: Get aggregated reputation for a DID
+      description: Returns current reputation score, breakdown and recent rating events.
+      operationId: getReputation
+      parameters:
+        - name: did
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Reputation summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reputation'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /reputation/{did}/ratings:
+    get:
+      tags: [Reputation]
+      summary: List ratings for a DID
+      description: Returns a paginated list of rating events (order-based ratings, dispute outcomes, manual adjustments).
+      operationId: listRatings
+      parameters:
+        - name: did
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [buyer_to_seller, seller_to_buyer, admin_adjustment]
+          description: Filter by rating type
+      responses:
+        '200':
+          description: Ratings list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RatingList'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags: [Reputation]
+      summary: Submit a rating for a DID
+      description: Other services (Orders, Escrow) submit ratings after order completion. Ratings are signed and stored; they will affect aggregated reputation after validation.
+      operationId: submitRating
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RatingCreateRequest'
+      responses:
+        '201':
+          description: Rating accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rating'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Duplicate rating or rating not permitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /reputation/aggregate:
+    post:
+      tags: [Reputation]
+      summary: Recompute aggregated reputation scores (admin)
+      description: Recomputes reputation scores from raw rating events. Used for corrections or after a sync/backfill.
+      operationId: recomputeReputation
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                did:
+                  type: string
+                  description: Recompute for a single DID; omit to recompute all.
+      responses:
+        '202':
+          description: Recompute job accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobId:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /sync/events:
+    post:
+      tags: [Sync]
+      summary: Accept blockchain event webhook (internal)
+      description: Endpoint used by the blockchain event listener to POST reputation-related on-chain events (e.g. Verified, RatingAdded). Validates and stores events to the index.
+      operationId: ingestEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChainEvent'
+      responses:
+        '200':
+          description: Event ingested
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /webhooks:
+    post:
+      tags: [Webhooks]
+      summary: Register a webhook
+      description: Register a webhook destination to receive identity/reputation events (e.g., 'reputation.updated', 'identity.verified').
+      operationId: registerWebhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookCreateRequest'
+      responses:
+        '201':
+          description: Webhook registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      description: Page number for pagination
+    limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      description: Items per page
+
+  responses:
+    BadRequest:
+      description: Invalid request payload or query parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalServerError:
+      description: Unexpected error occurred
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    # Identity profile stored off-chain (IPFS / DB) and linked to DID & on-chain info.
+    Identity:
+      type: object
+      properties:
+        did:
+          type: string
+          description: Decentralized identifier
+          example: "did:ethr:0x1234567890abcdef1234567890abcdef12345678"
+        address:
+          type: string
+          description: Primary wallet address
+          example: "0x1234567890abcdef1234567890abcdef12345678"
+        name:
+          type: string
+          example: "TechStore Official"
+        bio:
+          type: string
+        avatar:
+          type: string
+          description: IPFS CID or URL for avatar image
+        metadata:
+          type: object
+          additionalProperties: true
+          description: Arbitrary profile metadata (e.g., links, social)
+        verified:
+          type: boolean
+          example: true
+        verification:
+          $ref: '#/components/schemas/VerificationInfo'
+        reputationScore:
+          $ref: '#/components/schemas/ReputationScore'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    IdentityCreateRequest:
+      type: object
+      required: [address]
+      properties:
+        address:
+          type: string
+        name:
+          type: string
+        bio:
+          type: string
+        avatar:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+
+    IdentityUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        bio:
+          type: string
+        avatar:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+
+    VerificationInfo:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [unverified, pending, verified, revoked]
+          example: verified
+        method:
+          type: string
+          example: "onchain"
+        verifier:
+          type: string
+        txHash:
+          type: string
+        blockNumber:
+          type: integer
+        verifiedAt:
+          type: string
+          format: date-time
+
+    VerificationResult:
+      type: object
+      properties:
+        did:
+          type: string
+        verification:
+          $ref: '#/components/schemas/VerificationInfo'
+        message:
+          type: string
+
+    # Reputation aggregated view
+    Reputation:
+      type: object
+      properties:
+        did:
+          type: string
+        score:
+          $ref: '#/components/schemas/ReputationScore'
+        breakdown:
+          type: object
+          description: Breakdown by metric (on-time delivery, dispute rate, ratings, etc.)
+          additionalProperties:
+            type: number
+        recentRatings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Rating'
+        computedAt:
+          type: string
+          format: date-time
+
+    ReputationScore:
+      type: object
+      properties:
+        value:
+          type: integer
+          minimum: 0
+          maximum: 100
+          example: 92
+        algo:
+          type: string
+          description: Name/version of aggregation algorithm
+          example: "weighted-v1"
+        confidence:
+          type: number
+          description: Confidence (0-1)
+          example: 0.98
+
+    # Individual rating events (order => rating)
+    Rating:
+      type: object
+      properties:
+        ratingId:
+          type: string
+          example: "r_0xabc123"
+        orderId:
+          type: string
+          description: Order identifier that generated the rating (if any)
+          example: "1234543212345afsdas"
+        from:
+          type: object
+          properties:
+            did:
+              type: string
+            address:
+              type: string
+            name:
+              type: string
+        to:
+          type: object
+          properties:
+            did:
+              type: string
+            address:
+              type: string
+            name:
+              type: string
+        score:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+        comment:
+          type: string
+        type:
+          type: string
+          enum: [buyer_to_seller, seller_to_buyer, admin_adjustment]
+          example: buyer_to_seller
+        evidence:
+          type: object
+          description: Optional evidence (e.g., IPFS hash of proof)
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+
+    RatingCreateRequest:
+      type: object
+      required: [orderId, from, to, score]
+      properties:
+        orderId:
+          type: string
+        from:
+          type: object
+          required: [did, address]
+          properties:
+            did:
+              type: string
+            address:
+              type: string
+        to:
+          type: object
+          required: [did, address]
+          properties:
+            did:
+              type: string
+            address:
+              type: string
+        score:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+        evidence:
+          type: object
+          additionalProperties: true
+
+    RatingList:
+      type: object
+      properties:
+        ratings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Rating'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    # Generic chain event payload for ingest
+    ChainEvent:
+      type: object
+      required: [eventType, data, txHash]
+      properties:
+        eventType:
+          type: string
+          description: "Event type emitted by Reputation smart contract (e.g., 'Verified', 'RatingAdded')"
+        data:
+          type: object
+          additionalProperties: true
+        txHash:
+          type: string
+        blockNumber:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+
+    WebhookCreateRequest:
+      type: object
+      required: [url, events]
+      properties:
+        url:
+          type: string
+          format: uri
+        events:
+          type: array
+          items:
+            type: string
+          description: List of events (e.g., reputation.updated, identity.verified)
+        secret:
+          type: string
+          description: Optional HMAC secret for webhook signing
+
+    Webhook:
+      type: object
+      properties:
+        id:
+          type: string
+        url:
+          type: string
+        events:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    # Reuse Pagination and Error shapes similar to other services (compatible)
+    Pagination:
+      type: object
+      properties:
+        currentPage:
+          type: integer
+        totalPages:
+          type: integer
+        totalResults:
+          type: integer
+        resultsPerPage:
+          type: integer
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "INVALID_PARAMETER"
+            message:
+              type: string
+              example: "Invalid DID supplied"
+            details:
+              type: string
+              example: "DID must be a valid did:ethr format"
+        timestamp:
+          type: string
+          format: date-time
+
+    # Minimal compatibility stubs for blockchain info (similar to Listing/Search/Order)
+    BlockchainInfo:
+      type: object
+      properties:
+        network:
+          type: string
+          example: "Ethereum"
+          enum: [Ethereum, Polygon, Arbitrum]
+        contractAddress:
+          type: string
+        transactionHash:
+          type: string
+        blockNumber:
+          type: integer
