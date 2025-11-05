@@ -1,0 +1,544 @@
+openapi: 3.0.3
+info:
+  title: Search & Discovery API
+  description: |
+    Microservice for searching and discovering product listings in a decentralized e-commerce platform.
+    Supports filtering by category, tags, price range, seller reputation, and blockchain verification status.
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@decentral-ecom.io
+
+servers:
+  - url: https://api.decentral-ecom.io/search/v1
+    description: Production server
+  - url: http://localhost:3002/api/v1
+    description: Local development server
+
+tags:
+  - name: Search
+    description: Endpoints for product search and filtering
+  - name: Discovery
+    description: Endpoints for trending, featured, and recommended products
+  - name: Categories
+    description: Browse available product categories
+
+paths:
+  /search:
+    get:
+      tags:
+        - Search
+      summary: Search products
+      description: Search for products using keywords, filters, and sorting options
+      operationId: searchProducts
+      parameters:
+        - name: q
+          in: query
+          description: Search query (product name, description, or tags)
+          required: false
+          schema:
+            type: string
+            example: "smartphone"
+        - name: category
+          in: query
+          description: Filter by category ID or name
+          required: false
+          schema:
+            type: string
+            example: "electronics"
+        - name: tags
+          in: query
+          description: Comma-separated list of tags
+          required: false
+          schema:
+            type: string
+            example: "5g,android,unlocked"
+        - name: minPrice
+          in: query
+          description: Minimum price in ETH
+          required: false
+          schema:
+            type: number
+            format: float
+            example: 0.5
+        - name: maxPrice
+          in: query
+          description: Maximum price in ETH
+          required: false
+          schema:
+            type: number
+            format: float
+            example: 2.0
+        - name: minReputation
+          in: query
+          description: Minimum seller reputation score (0-100)
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 100
+            example: 80
+        - name: verified
+          in: query
+          description: Filter for blockchain-verified sellers only
+          required: false
+          schema:
+            type: boolean
+            example: true
+        - name: sortBy
+          in: query
+          description: Sort results by specified field
+          required: false
+          schema:
+            type: string
+            enum: [price_asc, price_desc, popularity, newest, reputation]
+            default: popularity
+        - name: page
+          in: query
+          description: Page number for pagination
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of results per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Successful search
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /trending:
+    get:
+      tags:
+        - Discovery
+      summary: Get trending products
+      description: Retrieve currently trending products based on views, sales, and social metrics
+      operationId: getTrending
+      parameters:
+        - name: timeframe
+          in: query
+          description: Time period for trending calculation
+          required: false
+          schema:
+            type: string
+            enum: [24h, 7d, 30d]
+            default: 24h
+        - name: category
+          in: query
+          description: Filter trending products by category
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Number of trending products to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        '200':
+          description: List of trending products
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductList'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /categories:
+    get:
+      tags:
+        - Categories
+      summary: List all categories
+      description: Get a hierarchical list of all available product categories
+      operationId: getCategories
+      responses:
+        '200':
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  categories:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Category'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /categories/{categoryId}/products:
+    get:
+      tags:
+        - Categories
+      summary: Get products by category
+      description: Retrieve all products in a specific category with pagination
+      operationId: getProductsByCategory
+      parameters:
+        - name: categoryId
+          in: path
+          description: Category identifier
+          required: true
+          schema:
+            type: string
+            example: "electronics"
+        - name: page
+          in: query
+          description: Page number for pagination
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of results per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: sortBy
+          in: query
+          description: Sort results by specified field
+          required: false
+          schema:
+            type: string
+            enum: [price_asc, price_desc, popularity, newest]
+            default: popularity
+      responses:
+        '200':
+          description: Products in category
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+        '404':
+          description: Category not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /products/{productId}:
+    get:
+      tags:
+        - Search
+      summary: Get product details
+      description: Retrieve detailed information about a specific product including IPFS metadata
+      operationId: getProductById
+      parameters:
+        - name: productId
+          in: path
+          description: Product identifier (blockchain address or IPFS hash)
+          required: true
+          schema:
+            type: string
+            example: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
+      responses:
+        '200':
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    SearchResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+        filters:
+          $ref: '#/components/schemas/AppliedFilters'
+
+    ProductList:
+      type: object
+      properties:
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        count:
+          type: integer
+          description: Total number of products returned
+
+    Product:
+      type: object
+      properties:
+        productId:
+          type: string
+          description: Unique product identifier (smart contract address)
+          example: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
+        name:
+          type: string
+          example: "Samsung Galaxy S23 Ultra"
+        description:
+          type: string
+          example: "5G smartphone with 200MP camera and S Pen"
+        price:
+          type: number
+          format: float
+          description: Price in ETH
+          example: 1.2
+        priceUSD:
+          type: number
+          format: float
+          description: Approximate price in USD
+          example: 2400.00
+        category:
+          type: string
+          example: "electronics"
+        tags:
+          type: array
+          items:
+            type: string
+          example: ["smartphone", "5g", "android", "samsung"]
+        seller:
+          $ref: '#/components/schemas/Seller'
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/IPFSImage'
+        stock:
+          type: integer
+          description: Available quantity
+          example: 15
+        blockchain:
+          $ref: '#/components/schemas/BlockchainInfo'
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-10-15T14:30:00Z"
+        views:
+          type: integer
+          description: Total view count
+          example: 1250
+        sales:
+          type: integer
+          description: Total number of sales
+          example: 47
+
+    Seller:
+      type: object
+      properties:
+        address:
+          type: string
+          description: Blockchain wallet address
+          example: "0x1234567890abcdef1234567890abcdef12345678"
+        did:
+          type: string
+          description: Decentralized identifier
+          example: "did:ethr:0x1234567890abcdef1234567890abcdef12345678"
+        name:
+          type: string
+          example: "TechStore Official"
+        reputation:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Reputation score (0-100)
+          example: 92
+        verified:
+          type: boolean
+          description: Whether seller is blockchain-verified
+          example: true
+        totalSales:
+          type: integer
+          example: 340
+
+    IPFSImage:
+      type: object
+      properties:
+        cid:
+          type: string
+          description: IPFS Content Identifier
+          example: "QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG"
+        url:
+          type: string
+          description: Gateway URL to access image
+          example: "https://ipfs.io/ipfs/QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG"
+        thumbnail:
+          type: string
+          description: Thumbnail version CID
+          example: "QmXnnyufdzAWL5CqZ2RnSNgPbvCc1ALT73s6epPrRnZ1Xy"
+
+    BlockchainInfo:
+      type: object
+      properties:
+        network:
+          type: string
+          description: Blockchain network
+          example: "Ethereum"
+          enum: [Ethereum, Polygon, Arbitrum]
+        contractAddress:
+          type: string
+          example: "0xabcdef1234567890abcdef1234567890abcdef12"
+        tokenId:
+          type: string
+          description: NFT token ID if applicable
+          example: "42"
+        transactionHash:
+          type: string
+          description: Creation transaction hash
+          example: "0x9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba"
+        blockNumber:
+          type: integer
+          example: 18234567
+
+    Pagination:
+      type: object
+      properties:
+        currentPage:
+          type: integer
+          example: 1
+        totalPages:
+          type: integer
+          example: 15
+        totalResults:
+          type: integer
+          example: 289
+        resultsPerPage:
+          type: integer
+          example: 20
+        hasNextPage:
+          type: boolean
+          example: true
+        hasPreviousPage:
+          type: boolean
+          example: false
+
+    AppliedFilters:
+      type: object
+      properties:
+        query:
+          type: string
+          example: "smartphone"
+        category:
+          type: string
+          example: "electronics"
+        priceRange:
+          type: object
+          properties:
+            min:
+              type: number
+              example: 0.5
+            max:
+              type: number
+              example: 2.0
+        tags:
+          type: array
+          items:
+            type: string
+          example: ["5g", "android"]
+        minReputation:
+          type: integer
+          example: 80
+        verified:
+          type: boolean
+          example: true
+        sortBy:
+          type: string
+          example: "popularity"
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "electronics"
+        name:
+          type: string
+          example: "Electronics"
+        description:
+          type: string
+          example: "Electronic devices and gadgets"
+        productCount:
+          type: integer
+          example: 1245
+        subcategories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+        icon:
+          type: string
+          description: IPFS CID for category icon
+          example: "QmPK1s3pNYLi9ERiq3BDxKa4XosgWwFRQUydHUtz4YgpqB"
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "INVALID_PARAMETER"
+            message:
+              type: string
+              example: "Invalid price range specified"
+            details:
+              type: string
+              example: "minPrice must be less than maxPrice"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-10-31T10:30:00Z"
