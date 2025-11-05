@@ -1,0 +1,16 @@
+{
+  "name": "nozama",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "api-order": "npx open-swagger-ui --open apispec/order-api.yaml",
+    "api-did": "npx open-swagger-ui --open apispec/id-reputation.yaml",
+    "api-escrow": "npx open-swagger-ui --open apispec/escrow-payment.yaml",
+    "api-listing": "npx open-swagger-ui --open apispec/listing-api.yaml",
+    "api-search": "npx open-swagger-ui --open apispec/search-api.yaml"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
