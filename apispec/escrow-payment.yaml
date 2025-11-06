@@ -1,284 +1,380 @@
 openapi: 3.0.3
 info:
-  title: Escrow Payment API
+  title: Escrow Payment Service API
+  description: |
+    Blockchain-backed escrow service that manages creation, locking, release and refund
+    of buyer payments for the decentralized e-commerce platform. Integrates with on-chain
+    Escrow smart contract (Escrow.sol) and emits events for other services (Orders, Reputation).
   version: 1.0.0
-  description: >
-    The **Escrow Payment API** enables secure buyer–seller transactions using blockchain-based smart contracts.  
-    It manages escrow creation, fund deposits, release conditions, disputes, and settlements — ensuring transparent and trustless exchanges between users on the platform.
-
   contact:
     name: API Support
-    email: support@marketplace.io
-    url: https://docs.marketplace.io
+    email: support@decentral-ecom.io
+
+servers:
+  - url: https://api.decentral-ecom.io/escrow/v1
+    description: Production server
+  - url: http://localhost:3005/api/v1
+    description: Local development server
 
 tags:
   - name: Escrow
-    description: Operations related to escrow creation, release, and dispute resolution
-  - name: Blockchain
-    description: On-chain verification and smart contract metadata
-  - name: Transactions
-    description: Payment and fund management within escrow
-
-servers:
-  - url: https://api.marketplace.io/v1
-    description: Production server
-  - url: https://sandbox.marketplace.io/v1
-    description: Sandbox environment
+    description: Escrow lifecycle management (create, lock, release, refund)
+  - name: Payments
+    description: Payment-related operations and transaction queries
+  - name: Webhooks
+    description: Outgoing notifications for escrow events
 
 paths:
   /escrows:
     get:
-      tags: [Escrow]
-      summary: List escrow contracts
-      description: Retrieve all escrow payment contracts with optional status or user filters.
+      tags:
+        - Escrow
+      summary: List escrows
+      description: Retrieve escrow records filtered by buyer, seller, order, or state
+      operationId: listEscrows
       parameters:
-        - name: buyer_id
+        - name: buyer
           in: query
-          schema: { type: string }
-          description: Filter escrows by buyer ID
-        - name: seller_id
-          in: query
-          schema: { type: string }
-          description: Filter escrows by seller ID
-        - name: status
-          in: query
+          description: Filter by buyer wallet or DID
+          required: false
           schema:
             type: string
-            enum: [PENDING, FUNDED, RELEASED, DISPUTED, CLOSED]
-          description: Filter escrows by current status
-        - $ref: '#/components/parameters/page'
-        - $ref: '#/components/parameters/limit'
+        - name: seller
+          in: query
+          description: Filter by seller wallet or DID
+          required: false
+          schema:
+            type: string
+        - name: orderId
+          in: query
+          description: Associated order identifier
+          required: false
+          schema:
+            type: string
+        - name: state
+          in: query
+          description: Escrow state filter
+          required: false
+          schema:
+            type: string
+            enum: [locked, released, refunded, failed]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
       responses:
         '200':
-          description: List of escrow contracts
+          description: Successful retrieval of escrow records
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedEscrowResponse'
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '500': { $ref: '#/components/responses/InternalServerError' }
+                $ref: '#/components/schemas/EscrowList'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: 'listing-api.yaml#/components/schemas/Error'
 
     post:
-      tags: [Escrow]
-      summary: Create a new escrow contract
-      description: Initialize an escrow contract between buyer and seller.
+      tags:
+        - Escrow
+      summary: Create escrow and lock funds
+      description: >
+        Initializes an escrow for an order and locks buyer funds on-chain. Service will
+        deploy/use Escrow smart contract and return escrow details and suggested transaction
+        payload if needed.
+      operationId: createEscrow
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateEscrowRequest'
+              $ref: '#/components/schemas/EscrowCreateRequest'
       responses:
         '201':
-          description: Escrow successfully created
+          description: Escrow created and funds locked (or transaction payload returned)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Escrow'
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '422': { $ref: '#/components/responses/UnprocessableEntity' }
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: 'listing-api.yaml#/components/schemas/Error'
+        '409':
+          description: Escrow already exists for this order
+          content:
+            application/json:
+              schema:
+                $ref: 'listing-api.yaml#/components/schemas/Error'
 
-  /escrows/{escrow_id}:
+  /escrows/{escrowId}:
     get:
-      tags: [Escrow]
-      summary: Retrieve escrow details
+      tags:
+        - Escrow
+      summary: Get escrow by ID
+      description: Retrieve escrow details including on-chain status and transaction info
+      operationId: getEscrow
       parameters:
-        - $ref: '#/components/parameters/escrow_id'
+        - name: escrowId
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
         '200':
-          description: Escrow contract details
+          description: Escrow details
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Escrow'
-        '404': { $ref: '#/components/responses/NotFound' }
+        '404':
+          description: Escrow not found
+          content:
+            application/json:
+              schema:
+                $ref: 'listing-api.yaml#/components/schemas/Error'
 
-  /escrows/{escrow_id}/fund:
+  /escrows/{escrowId}/release:
     post:
-      tags: [Transactions]
-      summary: Deposit funds into escrow
-      description: Allows the buyer to deposit agreed funds into the smart contract.
+      tags:
+        - Escrow
+        - Payments
+      summary: Release escrow funds to seller
+      description: >
+        Releases locked funds to the seller. Service will call the Escrow smart contract
+        (release) and emit relevant events for Orders and Reputation to consume.
+      operationId: releaseEscrow
       parameters:
-        - $ref: '#/components/parameters/escrow_id'
+        - name: escrowId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Escrow released successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Escrow'
+        '409':
+          description: Escrow cannot be released (invalid state or dispute)
+          content:
+            application/json:
+              schema:
+                $ref: 'listing-api.yaml#/components/schemas/Error'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: 'listing-api.yaml#/components/schemas/Error'
+
+  /escrows/{escrowId}/refund:
+    post:
+      tags:
+        - Escrow
+        - Payments
+      summary: Refund escrow to buyer
+      description: >
+        Refunds locked funds to the buyer (on cancellation or dispute resolution). Calls
+        Escrow smart contract refund logic and records transaction.
+      operationId: refundEscrow
+      parameters:
+        - name: escrowId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Escrow refunded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Escrow'
+        '409':
+          description: Refund not permitted
+          content:
+            application/json:
+              schema:
+                $ref: 'listing-api.yaml#/components/schemas/Error'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: 'listing-api.yaml#/components/schemas/Error'
+
+  /webhooks:
+    post:
+      tags:
+        - Webhooks
+      summary: Register a webhook for escrow events
+      description: Register an endpoint to receive escrow lifecycle events (escrow.created, escrow.released, escrow.refunded).
+      operationId: registerEscrowWebhook
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/FundEscrowRequest'
+              $ref: '#/components/schemas/WebhookCreateRequest'
       responses:
-        '200':
-          description: Funds deposited successfully
+        '201':
+          description: Webhook registered
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Escrow'
-        '402': { $ref: '#/components/responses/PaymentRequired' }
-
-  /escrows/{escrow_id}/release:
-    post:
-      tags: [Transactions]
-      summary: Release funds to seller
-      description: Trigger smart contract release once buyer confirms delivery.
-      parameters:
-        - $ref: '#/components/parameters/escrow_id'
-      responses:
-        '200':
-          description: Funds released to seller successfully
+                $ref: '#/components/schemas/Webhook'
+        '400':
+          description: Invalid webhook data
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Escrow'
-        '409': { $ref: '#/components/responses/Conflict' }
-
-  /escrows/{escrow_id}/dispute:
-    post:
-      tags: [Escrow]
-      summary: Raise a dispute
-      description: Buyer or seller can open a dispute to pause fund release.
-      parameters:
-        - $ref: '#/components/parameters/escrow_id'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DisputeRequest'
-      responses:
-        '200':
-          description: Dispute raised successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Escrow'
-        '409': { $ref: '#/components/responses/Conflict' }
+                $ref: 'listing-api.yaml#/components/schemas/Error'
 
 components:
-  parameters:
-    escrow_id:
-      name: escrow_id
-      in: path
-      required: true
-      description: Unique identifier of the escrow contract
-      schema: { type: string }
-
-    page:
-      name: page
-      in: query
-      schema: { type: integer, minimum: 1, default: 1 }
-      description: Page number for pagination
-    limit:
-      name: limit
-      in: query
-      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
-      description: Number of items per page
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
 
   schemas:
     Escrow:
       type: object
       properties:
-        escrow_id: { type: string, example: "escrow_abc123" }
-        buyer_id: { type: string, example: "user_buyer_01" }
-        seller_id: { type: string, example: "user_seller_01" }
-        item_id: { type: string, example: "item_12345" }
-        amount: { type: number, format: float, example: 249.99 }
-        currency: { type: string, example: "USD" }
-        status:
+        escrowId:
           type: string
-          enum: [PENDING, FUNDED, RELEASED, DISPUTED, CLOSED]
-        blockchain_txn_hash:
+          example: "esc_0xabc123escrowid"
+        orderId:
           type: string
-          example: "0x83f29e1c19f39a7a..."
-        ipfs_metadata_hash:
+          example: "1234543212345afsdas"
+        listing:
+          $ref: 'listing-api.yaml#/components/schemas/Listing'
+        buyer:
+          $ref: '#/components/schemas/Participant'
+        seller:
+          $ref: '#/components/schemas/Participant'
+        amount:
+          type: number
+          format: float
+          example: 0.8
+        currency:
           type: string
-          example: "QmXyz123abc456"
-        created_at: { type: string, format: date-time }
-        updated_at: { type: string, format: date-time }
+          example: "ETH"
+        state:
+          type: string
+          enum: [locked, released, refunded, failed]
+          example: "locked"
+        escrowAddress:
+          type: string
+          example: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"
+        transactionHash:
+          type: string
+        network:
+          type: string
+          example: "Ethereum"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        notes:
+          type: string
+          description: Optional notes or reason for state change
 
-    PaginatedEscrowResponse:
+    EscrowCreateRequest:
       type: object
+      required: [orderId, buyer, seller, amount, currency]
       properties:
-        data:
-          type: array
-          items: { $ref: '#/components/schemas/Escrow' }
-        pagination:
-          $ref: '#/components/schemas/Pagination'
-
-    Pagination:
-      type: object
-      properties:
-        page: { type: integer, example: 1 }
-        limit: { type: integer, example: 20 }
-        total_items: { type: integer, example: 87 }
-        total_pages: { type: integer, example: 5 }
-
-    CreateEscrowRequest:
-      type: object
-      required: [buyer_id, seller_id, item_id, amount, currency]
-      properties:
-        buyer_id: { type: string }
-        seller_id: { type: string }
-        item_id: { type: string }
-        amount: { type: number, format: float }
-        currency: { type: string, example: "USD" }
-
-    FundEscrowRequest:
-      type: object
-      required: [payment_method, transaction_reference]
-      properties:
-        payment_method: { type: string, enum: [CARD, UPI, CRYPTO, WALLET] }
-        transaction_reference: { type: string, example: "txn_789xyz" }
-
-    DisputeRequest:
-      type: object
-      required: [reason, raised_by]
-      properties:
-        reason: { type: string, example: "Item not received as described" }
-        raised_by: { type: string, example: "buyer" }
-
-  responses:
-    BadRequest:
-      description: Invalid request payload or query parameters
-      content:
-        application/json:
-          schema: { $ref: '#/components/schemas/ErrorResponse' }
-
-    NotFound:
-      description: Resource not found
-      content:
-        application/json:
-          schema: { $ref: '#/components/schemas/ErrorResponse' }
-
-    Conflict:
-      description: Action not allowed due to current escrow state
-      content:
-        application/json:
-          schema: { $ref: '#/components/schemas/ErrorResponse' }
-
-    UnprocessableEntity:
-      description: Validation failed for request payload
-      content:
-        application/json:
-          schema: { $ref: '#/components/schemas/ErrorResponse' }
-
-    PaymentRequired:
-      description: Payment authorization failed or insufficient funds
-      content:
-        application/json:
-          schema: { $ref: '#/components/schemas/ErrorResponse' }
-
-    InternalServerError:
-      description: Unexpected error occurred
-      content:
-        application/json:
-          schema: { $ref: '#/components/schemas/ErrorResponse' }
-
-  schemas:
-    ErrorResponse:
-      type: object
-      properties:
-        error_code: { type: string, example: "ESCROW_VALIDATION_FAILED" }
-        message: { type: string, example: "Invalid escrow creation payload" }
-        details:
+        orderId:
+          type: string
+          description: Associated order id
+        listingId:
+          type: string
+          description: Optional linked listing id (if available)
+        buyer:
+          $ref: '#/components/schemas/Participant'
+        seller:
+          $ref: '#/components/schemas/Participant'
+        amount:
+          type: number
+        currency:
+          type: string
+          example: "ETH"
+        escrowNetwork:
+          type: string
+          example: "Ethereum"
+        meta:
           type: object
+          description: Optional metadata (e.g., expiration, dispute window)
           additionalProperties: true
+
+    EscrowList:
+      type: object
+      properties:
+        escrows:
+          type: array
+          items:
+            $ref: '#/components/schemas/Escrow'
+        pagination:
+          $ref: 'listing-api.yaml#/components/schemas/Pagination'
+
+    Participant:
+      type: object
+      properties:
+        address:
+          type: string
+          example: "0x1234567890abcdef1234567890abcdef12345678"
+        did:
+          type: string
+          example: "did:ethr:0x1234567890abcdef1234567890abcdef12345678"
+        name:
+          type: string
+          example: "Niranjan"
+
+    WebhookCreateRequest:
+      type: object
+      required: [url, events]
+      properties:
+        url:
+          type: string
+          format: uri
+        events:
+          type: array
+          items:
+            type: string
+          description: Events to subscribe to (e.g., escrow.created, escrow.released, escrow.refunded)
+        secret:
+          type: string
+          description: Optional HMAC secret for webhook signing
+
+    Webhook:
+      type: object
+      properties:
+        id:
+          type: string
+        url:
+          type: string
+        events:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+
+security:
+  - bearerAuth: []
