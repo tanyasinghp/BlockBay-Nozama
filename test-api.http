@@ -1,0 +1,68 @@
+### Order Service API Testing
+### Make sure to:
+### 1. Start Hardhat node: npm run hardhat:node
+### 2. Deploy contracts: npm run hardhat:deploy
+### 3. Seed data: npx hardhat run scripts/seed-data.js --network localhost
+### 4. Start service: npm run service:start
+
+@baseUrl = http://localhost:3003/api/v1
+
+### 1. Health Check
+GET {{baseUrl}}/health
+
+### 2. Get All Listings
+GET {{baseUrl}}/listings
+
+### 3. Get Specific Listing
+GET {{baseUrl}}/listings/lst_001_hoodie
+
+### 4. Create Order (without payment)
+POST {{baseUrl}}/orders
+Content-Type: application/json
+
+{
+  "listingId": "lst_001_hoodie",
+  "quantity": 2,
+  "buyerAddress": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+}
+
+### 5. Get All Orders
+GET {{baseUrl}}/orders
+
+### 6. Get Specific Order (replace with actual orderId from step 4)
+GET {{baseUrl}}/orders/ord_1234567890_abcd1234
+
+### 7. Pay for Order (replace with actual orderId from step 4)
+POST {{baseUrl}}/orders/ord_1234567890_abcd1234/pay
+Content-Type: application/json
+
+### 8. Update Order Status to Shipped
+PUT {{baseUrl}}/orders/ord_1234567890_abcd1234/status
+Content-Type: application/json
+
+{
+  "status": "shipped",
+  "notes": "Shipped via DHL, tracking: DHL123456789"
+}
+
+### 9. Confirm Delivery and Release Escrow
+POST {{baseUrl}}/orders/ord_1234567890_abcd1234/confirm-delivery
+Content-Type: application/json
+
+### 10. Get Escrow by Order ID
+GET {{baseUrl}}/escrow/order/ord_1234567890_abcd1234
+
+### 11. Cancel Order (use a new order that hasn't been paid)
+POST {{baseUrl}}/orders/ord_1234567890_abcd1234/cancel
+Content-Type: application/json
+
+{
+  "reason": "Changed my mind"
+}
+
+### 12. Filter Orders by Buyer
+GET {{baseUrl}}/orders?buyer=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+
+### 13. Filter Orders by Status
+GET {{baseUrl}}/orders?status=paid
+

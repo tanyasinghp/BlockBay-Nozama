@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Hardhat files
+cache/
+artifacts/
+
+# Environment variables
+.env
+
+# Deployment info (can be regenerated)
+deployment.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Build outputs
+dist/
+build/
+
+# Coverage
+coverage/
+.nyc_output/
+

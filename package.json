@@ -3,14 +3,40 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "start": "node scripts/start.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "api-order": "npx open-swagger-ui --open apispec/order-api.yaml",
     "api-did": "npx open-swagger-ui --open apispec/id-reputation.yaml",
     "api-escrow": "npx open-swagger-ui --open apispec/escrow-payment.yaml",
     "api-listing": "npx open-swagger-ui --open apispec/listing-api.yaml",
-    "api-search": "npx open-swagger-ui --open apispec/search-api.yaml"
+    "api-search": "npx open-swagger-ui --open apispec/search-api.yaml",
+    "hardhat:node": "hardhat node",
+    "hardhat:compile": "hardhat compile",
+    "hardhat:deploy": "hardhat run scripts/deploy.js --network localhost",
+    "hardhat:test": "hardhat test",
+    "seed": "hardhat run scripts/seed-data.js --network localhost",
+    "service:start": "node services/order-service/index.js",
+    "service:dev": "nodemon services/order-service/index.js",
+    "frontend:dev": "cd frontend && npm run dev",
+    "frontend:build": "cd frontend && npm run build",
+    "frontend:install": "cd frontend && npm install",
+    "setup": "npm run hardhat:compile && npm run hardhat:deploy && npm run seed"
   },
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "express": "^4.18.2",
+    "ethers": "^6.9.0",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.2",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "hardhat": "^2.19.2",
+    "nodemon": "^3.0.2",
+    "@openzeppelin/contracts": "^5.0.1"
+  }
 }
