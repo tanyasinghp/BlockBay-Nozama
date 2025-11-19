@@ -1,0 +1,224 @@
+[
+  {
+    "id": "electronics",
+    "name": "Electronics",
+    "description": "Electronic devices, gadgets, and technology products",
+    "productCount": 5,
+    "icon": "QmPK1s3pNYLi9ERiq3BDxKa4XosgWwFRQUydHUtz4YgpqB",
+    "subcategories": [
+      {
+        "id": "smartphones",
+        "name": "Smartphones",
+        "description": "Mobile phones and accessories",
+        "productCount": 2,
+        "parentCategory": "electronics"
+      },
+      {
+        "id": "laptops",
+        "name": "Laptops & Computers",
+        "description": "Laptops, desktops, and computer accessories",
+        "productCount": 1,
+        "parentCategory": "electronics"
+      },
+      {
+        "id": "audio",
+        "name": "Audio & Headphones",
+        "description": "Headphones, speakers, and audio equipment",
+        "productCount": 2,
+        "parentCategory": "electronics"
+      },
+      {
+        "id": "wearables",
+        "name": "Wearables",
+        "description": "Smartwatches, fitness trackers, and wearable tech",
+        "productCount": 0,
+        "parentCategory": "electronics"
+      }
+    ]
+  },
+  {
+    "id": "fashion",
+    "name": "Fashion",
+    "description": "Clothing, shoes, accessories, and style items",
+    "productCount": 2,
+    "icon": "QmRAQB6YaCyidP37UdDnjFY5vQuiBrcqdyoW1CuDgwxkD4",
+    "subcategories": [
+      {
+        "id": "footwear",
+        "name": "Footwear",
+        "description": "Sneakers, shoes, boots, and sandals",
+        "productCount": 1,
+        "parentCategory": "fashion"
+      },
+      {
+        "id": "clothing",
+        "name": "Clothing",
+        "description": "Shirts, hoodies, pants, and apparel",
+        "productCount": 1,
+        "parentCategory": "fashion"
+      },
+      {
+        "id": "accessories",
+        "name": "Accessories",
+        "description": "Bags, wallets, jewelry, and fashion accessories",
+        "productCount": 0,
+        "parentCategory": "fashion"
+      },
+      {
+        "id": "luxury",
+        "name": "Luxury",
+        "description": "High-end fashion and designer items",
+        "productCount": 0,
+        "parentCategory": "fashion"
+      }
+    ]
+  },
+  {
+    "id": "home",
+    "name": "Home & Living",
+    "description": "Home appliances, furniture, and living essentials",
+    "productCount": 1,
+    "icon": "QmWZyXrYqtNz4QGP8FQLzR7BdG4wH5j2K9qL3mN6rT8vP1",
+    "subcategories": [
+      {
+        "id": "appliances",
+        "name": "Appliances",
+        "description": "Kitchen appliances, home automation, and smart devices",
+        "productCount": 1,
+        "parentCategory": "home"
+      },
+      {
+        "id": "furniture",
+        "name": "Furniture",
+        "description": "Chairs, tables, sofas, and home furniture",
+        "productCount": 0,
+        "parentCategory": "home"
+      },
+      {
+        "id": "decor",
+        "name": "Decor",
+        "description": "Home decoration, artwork, and design items",
+        "productCount": 0,
+        "parentCategory": "home"
+      },
+      {
+        "id": "garden",
+        "name": "Garden",
+        "description": "Outdoor furniture, gardening tools, and plants",
+        "productCount": 0,
+        "parentCategory": "home"
+      }
+    ]
+  },
+  {
+    "id": "sports",
+    "name": "Sports & Fitness",
+    "description": "Sports equipment, fitness gear, and outdoor activities",
+    "productCount": 1,
+    "icon": "QmVHxRyVSNjV9j6hg7YLc4tBCj6yPKzQZp7n4qK8VXCP4M",
+    "subcategories": [
+      {
+        "id": "fitness",
+        "name": "Fitness Equipment",
+        "description": "Gym equipment, weights, and fitness accessories",
+        "productCount": 0,
+        "parentCategory": "sports"
+      },
+      {
+        "id": "wearables",
+        "name": "Fitness Wearables",
+        "description": "Fitness trackers, smartwatches, and health monitors",
+        "productCount": 1,
+        "parentCategory": "sports"
+      },
+      {
+        "id": "outdoor",
+        "name": "Outdoor Sports",
+        "description": "Camping, hiking, cycling, and outdoor gear",
+        "productCount": 0,
+        "parentCategory": "sports"
+      },
+      {
+        "id": "team-sports",
+        "name": "Team Sports",
+        "description": "Basketball, football, soccer, and team sport equipment",
+        "productCount": 0,
+        "parentCategory": "sports"
+      }
+    ]
+  },
+  {
+    "id": "books",
+    "name": "Books & Education",
+    "description": "Books, educational materials, and learning resources",
+    "productCount": 1,
+    "icon": "QmXKzW7YtPvL6qM3nR8cTf5jG9hB2zX4vN6wQ1sA7uE9oR",
+    "subcategories": [
+      {
+        "id": "technical",
+        "name": "Technical Books",
+        "description": "Programming, engineering, and technical manuals",
+        "productCount": 1,
+        "parentCategory": "books"
+      },
+      {
+        "id": "fiction",
+        "name": "Fiction",
+        "description": "Novels, stories, and fictional literature",
+        "productCount": 0,
+        "parentCategory": "books"
+      },
+      {
+        "id": "non-fiction",
+        "name": "Non-Fiction",
+        "description": "Biography, history, science, and educational books",
+        "productCount": 0,
+        "parentCategory": "books"
+      },
+      {
+        "id": "digital",
+        "name": "Digital Media",
+        "description": "E-books, audiobooks, and digital learning content",
+        "productCount": 0,
+        "parentCategory": "books"
+      }
+    ]
+  },
+  {
+    "id": "gaming",
+    "name": "Gaming",
+    "description": "Video games, gaming accessories, and entertainment",
+    "productCount": 0,
+    "icon": "QmTxGC1vjVgH9KJ7NTgB2yX3RzFZGL4yF82L9BqW4xJ1cB",
+    "subcategories": [
+      {
+        "id": "consoles",
+        "name": "Gaming Consoles",
+        "description": "PlayStation, Xbox, Nintendo, and gaming systems",
+        "productCount": 0,
+        "parentCategory": "gaming"
+      },
+      {
+        "id": "pc-gaming",
+        "name": "PC Gaming",
+        "description": "Gaming keyboards, mice, monitors, and PC accessories",
+        "productCount": 0,
+        "parentCategory": "gaming"
+      },
+      {
+        "id": "games",
+        "name": "Video Games",
+        "description": "Game titles, digital downloads, and game content",
+        "productCount": 0,
+        "parentCategory": "gaming"
+      },
+      {
+        "id": "accessories",
+        "name": "Gaming Accessories",
+        "description": "Controllers, headsets, and gaming peripherals",
+        "productCount": 0,
+        "parentCategory": "gaming"
+      }
+    ]
+  }
+]

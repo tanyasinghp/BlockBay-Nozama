@@ -1,0 +1,21 @@
+{
+  "name": "nozama-scripts",
+  "version": "1.0.0",
+  "description": "Setup and utility scripts for Nozama blockchain e-commerce platform",
+  "main": "populate-mongodb.js",
+  "scripts": {
+    "populate:mongodb": "node populate-mongodb.js",
+    "test:mongodb": "node test-mongodb-connection.js",
+    "clean:mongodb": "node clean-mongodb.js"
+  },
+  "dependencies": {
+    "mongodb": "^6.3.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "keywords": ["blockchain", "e-commerce", "mongodb", "setup"],
+  "author": "Nozama Team",
+  "license": "MIT"
+}

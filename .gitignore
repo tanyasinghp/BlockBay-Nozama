@@ -1,0 +1,153 @@
+# Dependencies
+node_modules/
+*/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+package-lock.json
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+scripts/.env
+services/**/.env
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Dependency directories
+jspm_packages/
+
+# Hardhat files
+/cache
+/artifacts
+contracts/cache/
+contracts/artifacts/
+**/cache/
+**/artifacts/
+
+# TypeChain files
+/typechain
+/typechain-types
+
+# solidity-coverage files
+/coverage
+/coverage.json
+
+# Hardhat Ignition default folder for deployments against a local node
+ignition/deployments/chain-31337
+
+# Blockchain specific
+contracts/deployments.json
+contracts/blockchain-state.json
+**/deployments.json
+**/blockchain-state.json
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# MongoDB files
+mongodb-population.json
+scripts/mongodb-population.json
+
+# Build directories
+build/
+dist/
+out/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Kubernetes
+*.yaml.bak
+*.yml.bak
+
+# Test files
+test-results/
+coverage/
+.nyc_output/
+
+# Lock files (keep only package-lock.json in root)
+yarn.lock
+pnpm-lock.yaml
+scripts/package-lock.json
+contracts/package-lock.json
+
+# Service directories (future microservices)
+services/**/node_modules/
+services/**/.env
+services/**/dist/
+services/**/build/
+
+# IPFS and Web3 cache
+.ipfs/
+ipfs-cache/
+web3-cache/
+
+# Certificate files
+*.pem
+*.key
+*.crt
+
+# Backup files
+*.bak
+*.backup
+
+# Local development
+.local/
+local/

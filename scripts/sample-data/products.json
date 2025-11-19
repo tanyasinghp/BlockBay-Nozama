@@ -1,0 +1,292 @@
+[
+  {
+    "productId": "1",
+    "name": "Samsung Galaxy S23 Ultra",
+    "description": "5G smartphone with 200MP camera and S Pen. Premium flagship device with advanced photography capabilities, long-lasting battery, and S Pen functionality for productivity.",
+    "price": 1.2,
+    "priceUSD": 2400.00,
+    "category": "electronics",
+    "subcategory": "smartphones",
+    "tags": ["smartphone", "5g", "android", "samsung", "unlocked", "camera"],
+    "stock": 15,
+    "views": 1250,
+    "sales": 47,
+    "featured": true,
+    "isActive": true,
+    "blockchain": {
+      "network": "Ethereum",
+      "contractAddress": "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+      "tokenId": "1",
+      "transactionHash": "0x9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba1",
+      "blockNumber": 18234567
+    },
+    "images": [
+      {
+        "cid": "QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG",
+        "url": "https://ipfs.io/ipfs/QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG",
+        "thumbnail": "QmXnnyufdzAWL5CqZ2RnSNgPbvCc1ALT73s6epPrRnZ1Xy"
+      }
+    ]
+  },
+  {
+    "productId": "2",
+    "name": "iPhone 14 Pro Max",
+    "description": "Latest iPhone with A16 Bionic chip, 48MP camera system, and Dynamic Island. Premium iOS experience with exceptional build quality and camera performance.",
+    "price": 1.5,
+    "priceUSD": 3000.00,
+    "category": "electronics",
+    "subcategory": "smartphones",
+    "tags": ["iphone", "ios", "apple", "5g", "premium", "camera"],
+    "stock": 8,
+    "views": 2100,
+    "sales": 63,
+    "featured": true,
+    "isActive": true,
+    "blockchain": {
+      "network": "Ethereum",
+      "contractAddress": "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+      "tokenId": "2",
+      "transactionHash": "0x9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba2",
+      "blockNumber": 18234568
+    },
+    "images": [
+      {
+        "cid": "QmXnnyufdzAWL5CqZ2RnSNgPbvCc1ALT73s6epPrRnZ1Xy",
+        "url": "https://ipfs.io/ipfs/QmXnnyufdzAWL5CqZ2RnSNgPbvCc1ALT73s6epPrRnZ1Xy",
+        "thumbnail": "QmPK1s3pNYLi9ERiq3BDxKa4XosgWwFRQUydHUtz4YgpqB"
+      }
+    ]
+  },
+  {
+    "productId": "3",
+    "name": "MacBook Pro M2",
+    "description": "14-inch MacBook Pro with M2 Pro chip, 16GB RAM, 512GB SSD. Perfect for developers, creators, and professionals requiring high performance.",
+    "price": 3.2,
+    "priceUSD": 6400.00,
+    "category": "electronics",
+    "subcategory": "laptops",
+    "tags": ["macbook", "apple", "laptop", "m2", "professional", "development"],
+    "stock": 5,
+    "views": 890,
+    "sales": 23,
+    "featured": false,
+    "isActive": true,
+    "blockchain": {
+      "network": "Ethereum",
+      "contractAddress": "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+      "tokenId": "3",
+      "transactionHash": "0x9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba3",
+      "blockNumber": 18234569
+    },
+    "images": [
+      {
+        "cid": "QmPK1s3pNYLi9ERiq3BDxKa4XosgWwFRQUydHUtz4YgpqB",
+        "url": "https://ipfs.io/ipfs/QmPK1s3pNYLi9ERiq3BDxKa4XosgWwFRQUydHUtz4YgpqB",
+        "thumbnail": "QmNLei78zWmzUdbeRB3CiUfAizWUrbeeZh5K1rhAQKCh51"
+      }
+    ]
+  },
+  {
+    "productId": "4",
+    "name": "AirPods Pro 2nd Gen",
+    "description": "Apple's premium wireless earbuds with active noise cancellation, spatial audio, and all-day battery life.",
+    "price": 0.35,
+    "priceUSD": 700.00,
+    "category": "electronics",
+    "subcategory": "audio",
+    "tags": ["airpods", "wireless", "noise-canceling", "apple", "audio"],
+    "stock": 25,
+    "views": 1876,
+    "sales": 89,
+    "featured": true,
+    "isActive": true,
+    "blockchain": {
+      "network": "Ethereum",
+      "contractAddress": "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+      "tokenId": "4",
+      "transactionHash": "0x9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba4",
+      "blockNumber": 18234570
+    },
+    "images": [
+      {
+        "cid": "QmNLei78zWmzUdbeRB3CiUfAizWUrbeeZh5K1rhAQKCh51",
+        "url": "https://ipfs.io/ipfs/QmNLei78zWmzUdbeRB3CiUfAizWUrbeeZh5K1rhAQKCh51",
+        "thumbnail": "QmRAQB6YaCyidP37UdDnjFY5vQuiBrcqdyoW1CuDgwxkD4"
+      }
+    ]
+  },
+  {
+    "productId": "5",
+    "name": "Sony WH-1000XM4",
+    "description": "Industry-leading wireless noise canceling headphones with exceptional sound quality and 30-hour battery life.",
+    "price": 0.28,
+    "priceUSD": 560.00,
+    "category": "electronics",
+    "subcategory": "audio",
+    "tags": ["headphones", "sony", "noise-canceling", "wireless", "premium"],
+    "stock": 12,
+    "views": 743,
+    "sales": 34,
+    "featured": false,
+    "isActive": true,
+    "blockchain": {
+      "network": "Ethereum",
+      "contractAddress": "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+      "tokenId": "5",
+      "transactionHash": "0x9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba5",
+      "blockNumber": 18234571
+    },
+    "images": [
+      {
+        "cid": "QmSrCRJmzE4zPiQwvZQ2R4PLfAAp5Uu1k3F3wWANa9Y8zA",
+        "url": "https://ipfs.io/ipfs/QmSrCRJmzE4zPiQwvZQ2R4PLfAAp5Uu1k3F3wWANa9Y8zA",
+        "thumbnail": "QmTxGC1vjVgH9KJ7NTgB2yX3RzFZGL4yF82L9BqW4xJ1cB"
+      }
+    ]
+  },
+  {
+    "productId": "6",
+    "name": "Nike Air Jordan 1 Retro High",
+    "description": "Iconic basketball sneakers in classic colorway. Premium leather construction with vintage appeal and modern comfort.",
+    "price": 0.18,
+    "priceUSD": 360.00,
+    "category": "fashion",
+    "subcategory": "footwear",
+    "tags": ["sneakers", "nike", "jordan", "basketball", "retro", "leather"],
+    "stock": 20,
+    "views": 2350,
+    "sales": 127,
+    "featured": true,
+    "isActive": true,
+    "blockchain": {
+      "network": "Ethereum",
+      "contractAddress": "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+      "tokenId": "6",
+      "transactionHash": "0x9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba6",
+      "blockNumber": 18234572
+    },
+    "images": [
+      {
+        "cid": "QmRAQB6YaCyidP37UdDnjFY5vQuiBrcqdyoW1CuDgwxkD4",
+        "url": "https://ipfs.io/ipfs/QmRAQB6YaCyidP37UdDnjFY5vQuiBrcqdyoW1CuDgwxkD4",
+        "thumbnail": "QmSrCRJmzE4zPiQwvZQ2R4PLfAAp5Uu1k3F3wWANa9Y8zA"
+      }
+    ]
+  },
+  {
+    "productId": "7",
+    "name": "Adidas Oversized Hoodie",
+    "description": "Comfortable oversized hoodie in premium cotton blend. Perfect for casual wear with trendy streetwear aesthetic.",
+    "price": 0.08,
+    "priceUSD": 160.00,
+    "category": "fashion",
+    "subcategory": "clothing",
+    "tags": ["hoodie", "adidas", "streetwear", "cotton", "oversized", "casual"],
+    "stock": 35,
+    "views": 1432,
+    "sales": 78,
+    "featured": false,
+    "isActive": true,
+    "blockchain": {
+      "network": "Ethereum",
+      "contractAddress": "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+      "tokenId": "7",
+      "transactionHash": "0x9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba7",
+      "blockNumber": 18234573
+    },
+    "images": [
+      {
+        "cid": "QmTxGC1vjVgH9KJ7NTgB2yX3RzFZGL4yF82L9BqW4xJ1cB",
+        "url": "https://ipfs.io/ipfs/QmTxGC1vjVgH9KJ7NTgB2yX3RzFZGL4yF82L9BqW4xJ1cB",
+        "thumbnail": "QmVHxRyVSNjV9j6hg7YLc4tBCj6yPKzQZp7n4qK8VXCP4M"
+      }
+    ]
+  },
+  {
+    "productId": "8",
+    "name": "Smart Coffee Maker",
+    "description": "WiFi-enabled coffee maker with app control, programmable brewing, and premium stainless steel design.",
+    "price": 0.15,
+    "priceUSD": 300.00,
+    "category": "home",
+    "subcategory": "appliances",
+    "tags": ["coffee", "smart", "wifi", "appliance", "kitchen", "programmable"],
+    "stock": 18,
+    "views": 567,
+    "sales": 29,
+    "featured": false,
+    "isActive": true,
+    "blockchain": {
+      "network": "Ethereum",
+      "contractAddress": "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+      "tokenId": "8",
+      "transactionHash": "0x9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba8",
+      "blockNumber": 18234574
+    },
+    "images": [
+      {
+        "cid": "QmWZyXrYqtNz4QGP8FQLzR7BdG4wH5j2K9qL3mN6rT8vP1",
+        "url": "https://ipfs.io/ipfs/QmWZyXrYqtNz4QGP8FQLzR7BdG4wH5j2K9qL3mN6rT8vP1",
+        "thumbnail": "QmXKzW7YtPvL6qM3nR8cTf5jG9hB2zX4vN6wQ1sA7uE9oR"
+      }
+    ]
+  },
+  {
+    "productId": "9",
+    "name": "Fitness Tracker Pro",
+    "description": "Advanced fitness tracker with heart rate monitoring, GPS, sleep tracking, and 7-day battery life.",
+    "price": 0.12,
+    "priceUSD": 240.00,
+    "category": "sports",
+    "subcategory": "wearables",
+    "tags": ["fitness", "tracker", "health", "gps", "heart-rate", "sports"],
+    "stock": 30,
+    "views": 1100,
+    "sales": 56,
+    "featured": true,
+    "isActive": true,
+    "blockchain": {
+      "network": "Ethereum",
+      "contractAddress": "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+      "tokenId": "9",
+      "transactionHash": "0x9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba9",
+      "blockNumber": 18234575
+    },
+    "images": [
+      {
+        "cid": "QmVHxRyVSNjV9j6hg7YLc4tBCj6yPKzQZp7n4qK8VXCP4M",
+        "url": "https://ipfs.io/ipfs/QmVHxRyVSNjV9j6hg7YLc4tBCj6yPKzQZp7n4qK8VXCP4M",
+        "thumbnail": "QmWZyXrYqtNz4QGP8FQLzR7BdG4wH5j2K9qL3mN6rT8vP1"
+      }
+    ]
+  },
+  {
+    "productId": "10",
+    "name": "Programming Books Collection",
+    "description": "Essential programming books including JavaScript, Python, and system design. Perfect for developers and students.",
+    "price": 0.04,
+    "priceUSD": 80.00,
+    "category": "books",
+    "subcategory": "technical",
+    "tags": ["books", "programming", "javascript", "python", "education", "development"],
+    "stock": 50,
+    "views": 423,
+    "sales": 67,
+    "featured": false,
+    "isActive": true,
+    "blockchain": {
+      "network": "Ethereum",
+      "contractAddress": "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+      "tokenId": "10",
+      "transactionHash": "0x9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcb10",
+      "blockNumber": 18234576
+    },
+    "images": [
+      {
+        "cid": "QmXKzW7YtPvL6qM3nR8cTf5jG9hB2zX4vN6wQ1sA7uE9oR",
+        "url": "https://ipfs.io/ipfs/QmXKzW7YtPvL6qM3nR8cTf5jG9hB2zX4vN6wQ1sA7uE9oR",
+        "thumbnail": "QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG"
+      }
+    ]
+  }
+]
