@@ -1,66 +1,90 @@
-const { ethers } = require("hardhat");
+// contracts/scripts/deploy.js
+const hre = require("hardhat");
+const fs = require("fs");
 
 async function main() {
-  console.log("🚀 Starting deployment of Nozama smart contracts...\n");
-  
-  // Get the deployer account
-  const [deployer] = await ethers.getSigners();
-  console.log("📋 Deploying contracts with account:", deployer.address);
-  console.log("💰 Account balance:", ethers.formatEther(await ethers.provider.getBalance(deployer.address)), "ETH\n");
+  console.log("\n🚀 Starting full Nozama smart contract deployment...\n");
 
-  // Deploy ProductRegistry
+  const [deployer] = await hre.ethers.getSigners();
+  console.log("👤 Deployer:", deployer.address);
+  console.log(
+    "💰 Balance:",
+    hre.ethers.formatEther(await hre.ethers.provider.getBalance(deployer.address)),
+    "ETH\n"
+  );
+
+  // ---------------------------
+  // 1. ProductRegistry
+  // ---------------------------
   console.log("📦 Deploying ProductRegistry...");
-  const ProductRegistry = await ethers.getContractFactory("ProductRegistry");
-  const productRegistry = await ProductRegistry.deploy();
-  await productRegistry.waitForDeployment();
-  const productRegistryAddress = await productRegistry.getAddress();
-  console.log("✅ ProductRegistry deployed to:", productRegistryAddress);
+  const ProductRegistry = await hre.ethers.deployContract("ProductRegistry");
+  await ProductRegistry.waitForDeployment();
+  const productAddress = await ProductRegistry.getAddress();
+  console.log("✅ ProductRegistry:", productAddress);
 
-  // Deploy Reputation
-  console.log("⭐ Deploying Reputation...");
-  const Reputation = await ethers.getContractFactory("Reputation");
-  const reputation = await Reputation.deploy();
-  await reputation.waitForDeployment();
-  const reputationAddress = await reputation.getAddress();
-  console.log("✅ Reputation deployed to:", reputationAddress);
+  // ---------------------------
+  // 2. Reputation
+  // ---------------------------
+  console.log("\n⭐ Deploying Reputation...");
+  const Reputation = await hre.ethers.deployContract("Reputation");
+  await Reputation.waitForDeployment();
+  const reputationAddress = await Reputation.getAddress();
+  console.log("✅ Reputation:", reputationAddress);
 
-  // Save deployment addresses
-  const fs = require('fs');
-  const deploymentInfo = {
+  // ---------------------------
+  // 3. ListingRegistry
+  // ---------------------------
+  console.log("\n🛒 Deploying ListingRegistry...");
+  const ListingRegistry = await hre.ethers.deployContract("ListingRegistry");
+  await ListingRegistry.waitForDeployment();
+  const listingAddress = await ListingRegistry.getAddress();
+  console.log("✅ ListingRegistry:", listingAddress);
+
+  // ---------------------------
+  // 4. Escrow
+  // ---------------------------
+  console.log("\n💸 Deploying Escrow...");
+  const Escrow = await hre.ethers.deployContract("Escrow");
+  await Escrow.waitForDeployment();
+  const escrowAddress = await Escrow.getAddress();
+  console.log("✅ Escrow:", escrowAddress);
+
+  // ---------------------------
+  // 5. OrderManager
+  // ---------------------------
+  console.log("\n📦 Deploying OrderManager...");
+  const OrderManager = await hre.ethers.deployContract(
+    "OrderManager",
+    [listingAddress, escrowAddress] // constructor params
+  );
+  await OrderManager.waitForDeployment();
+  const orderManagerAddress = await OrderManager.getAddress();
+  console.log("✅ OrderManager:", orderManagerAddress);
+
+  // ---------------------------
+  // Save deployments.json
+  // ---------------------------
+  const output = {
     network: "localhost",
     chainId: 31337,
     deployedAt: new Date().toISOString(),
     contracts: {
-      ProductRegistry: {
-        address: productRegistryAddress,
-        deploymentHash: productRegistry.deploymentTransaction()?.hash
-      },
-      Reputation: {
-        address: reputationAddress,
-        deploymentHash: reputation.deploymentTransaction()?.hash
-      }
+      ProductRegistry: { address: productAddress },
+      Reputation: { address: reputationAddress },
+      ListingRegistry: { address: listingAddress },
+      Escrow: { address: escrowAddress },
+      OrderManager: { address: orderManagerAddress }
     },
     deployer: deployer.address
   };
 
-  fs.writeFileSync(
-    './deployments.json', 
-    JSON.stringify(deploymentInfo, null, 2)
-  );
+  fs.writeFileSync("./deployments.json", JSON.stringify(output, null, 2));
 
-  console.log("\n📄 Deployment information saved to deployments.json");
-  console.log("\n🎉 All contracts deployed successfully!");
-  console.log("\n📋 Summary:");
-  console.log("   ProductRegistry:", productRegistryAddress);
-  console.log("   Reputation:     ", reputationAddress);
-  console.log("\n💡 Next steps:");
-  console.log("   1. Run: npm run populate");
-  console.log("   2. Run: node ../scripts/populate-mongodb.js");
+  console.log("\n📄 deployments.json updated successfully!");
+  console.log("🎉 Deployment complete!\n");
 }
 
-main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error("❌ Deployment failed:", error);
-    process.exit(1);
-  });
+main().catch((err) => {
+  console.error("❌ Deployment failed:", err);
+  process.exit(1);
+});
