@@ -21,6 +21,7 @@ export interface IProduct extends Document {
   };
   ipfsCID?: string;
   views: number;
+  tags: string[];
   createdAt: Date;
   updatedAt: Date;
   incrementViews(): Promise<IProduct>;
@@ -60,6 +61,7 @@ const ProductSchema: Schema = new Schema({
   },
   ipfsCID: String,
   views: { type: Number, default: 0 },
+  tags: [{ type: String }],
 }, {
   timestamps: true,
   collection: 'products'
@@ -69,12 +71,14 @@ const ProductSchema: Schema = new Schema({
 ProductSchema.index({
   name: 'text',
   description: 'text',
-  category: 'text'
+  category: 'text',
+  tags: 'text'
 }, {
   weights: {
     name: 10,
     description: 5,
-    category: 2
+    category: 2,
+    tags: 8
   },
   name: 'text_search_index'
 });

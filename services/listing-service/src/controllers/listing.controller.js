@@ -5,8 +5,31 @@ const ipfsService = require('../services/ipfsService');
 class ListingController {
   async create(req, res, next) {
     try {
-      const listing = await listingService.createListing(req.body);
-      res.status(201).json(listing);
+      // 1. Create listing in database
+      const listingData = { ...req.body, status: 'published' };
+      const listing = await listingService.createListing(listingData);
+
+      // 2. Upload metadata to IPFS
+      const ipfsCID = await ipfsService.uploadMetadata({
+        name: listing.name,
+        description: listing.description,
+        images: listing.images,
+      });
+
+      // 3. Publish to blockchain
+      const tx = await blockchainService.publishListing(listing, ipfsCID);
+
+      // 4. Update local listing with blockchain and IPFS data
+      const updatedListing = await listingService.updateListing(listing.listingId, {
+        ipfsCID,
+        blockchain: {
+          network: 'localhost',
+          contractAddress: blockchainService.getContractAddress(),
+          transactionHash: tx.hash,
+        },
+      });
+
+      res.status(201).json(updatedListing);
     } catch (error) {
       next(error);
     }
@@ -35,25 +58,29 @@ class ListingController {
 
   async publish(req, res, next) {
     try {
-      const { id } = req.params;
-      const listing = await listingService.getListingById(id);
-
+      const listingId = req.params.id;
+      const listing = await listingService.getListingById(listingId);
+      
       if (!listing) {
         return res.status(404).json({ message: 'Listing not found' });
       }
 
-      // 1. Upload metadata to IPFS
+      if (listing.status === 'published') {
+        return res.status(400).json({ message: 'Listing is already published' });
+      }
+
+      // Upload metadata to IPFS
       const ipfsCID = await ipfsService.uploadMetadata({
         name: listing.name,
         description: listing.description,
         images: listing.images,
       });
 
-      // 2. Publish to blockchain
+      // Publish to blockchain
       const tx = await blockchainService.publishListing(listing, ipfsCID);
 
-      // 3. Update local status
-      const updatedListing = await listingService.updateListing(id, {
+      // Update listing status and blockchain data
+      const updatedListing = await listingService.updateListing(listingId, {
         status: 'published',
         ipfsCID,
         blockchain: {
@@ -63,14 +90,12 @@ class ListingController {
         },
       });
 
-      res.json({
-        message: 'Listing published successfully!',
-        listing: updatedListing,
-      });
+      res.json(updatedListing);
     } catch (error) {
       next(error);
     }
   }
+
 }
 
 module.exports = new ListingController();
