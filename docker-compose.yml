@@ -1,0 +1,132 @@
+version: '3.8'
+
+services:
+  # Search & Discovery Service
+  search-discovery:
+    build:
+      context: ./services/search-discovery
+      dockerfile: Dockerfile
+    container_name: nozama-search-discovery
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=3002
+      - API_VERSION=v1
+      - MONGODB_URI=${MONGODB_URI}
+      - MONGODB_DB_NAME=${MONGODB_SEARCH_DB:-nozama-search}
+      - BLOCKCHAIN_RPC_URL=${BLOCKCHAIN_RPC_URL:-http://host.docker.internal:8545}
+      - PRODUCT_REGISTRY_ADDRESS=${PRODUCT_REGISTRY_ADDRESS}
+      - REPUTATION_CONTRACT_ADDRESS=${REPUTATION_CONTRACT_ADDRESS}
+      - BLOCKCHAIN_NETWORK=${BLOCKCHAIN_NETWORK:-localhost}
+      - IPFS_GATEWAY_URL=${IPFS_GATEWAY_URL:-https://ipfs.io/ipfs/}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000,http://localhost:5173}
+      - RATE_LIMIT_WINDOW_MS=${RATE_LIMIT_WINDOW_MS:-900000}
+      - RATE_LIMIT_MAX_REQUESTS=${RATE_LIMIT_MAX_REQUESTS:-100}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - DEFAULT_PAGE_SIZE=${DEFAULT_PAGE_SIZE:-20}
+      - MAX_PAGE_SIZE=${MAX_PAGE_SIZE:-100}
+      - SEARCH_TIMEOUT_MS=${SEARCH_TIMEOUT_MS:-5000}
+    networks:
+      - nozama-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3002/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); })"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - search-logs:/app/logs
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # Listing Service (Placeholder - To be implemented)
+  # listing-service:
+  #   build:
+  #     context: ./services/listing-service
+  #     dockerfile: Dockerfile
+  #   container_name: nozama-listing-service
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3004:3004"
+  #   environment:
+  #     - NODE_ENV=${NODE_ENV:-production}
+  #     - PORT=3004
+  #     - MONGODB_URI=${MONGODB_URI}
+  #     - BLOCKCHAIN_RPC_URL=${BLOCKCHAIN_RPC_URL:-http://host.docker.internal:8545}
+  #   networks:
+  #     - nozama-network
+  #   extra_hosts:
+  #     - "host.docker.internal:host-gateway"
+
+  # Order Service (Placeholder - To be implemented)
+  # order-service:
+  #   build:
+  #     context: ./services/order-service
+  #     dockerfile: Dockerfile
+  #   container_name: nozama-order-service
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3003:3003"
+  #   environment:
+  #     - NODE_ENV=${NODE_ENV:-production}
+  #     - PORT=3003
+  #     - BLOCKCHAIN_RPC_URL=${BLOCKCHAIN_RPC_URL:-http://host.docker.internal:8545}
+  #   networks:
+  #     - nozama-network
+  #   extra_hosts:
+  #     - "host.docker.internal:host-gateway"
+
+  # Payment Service (Placeholder - To be implemented)
+  # payment-service:
+  #   build:
+  #     context: ./services/payment-service
+  #     dockerfile: Dockerfile
+  #   container_name: nozama-payment-service
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3005:3005"
+  #   environment:
+  #     - NODE_ENV=${NODE_ENV:-production}
+  #     - PORT=3005
+  #     - BLOCKCHAIN_RPC_URL=${BLOCKCHAIN_RPC_URL:-http://host.docker.internal:8545}
+  #   networks:
+  #     - nozama-network
+  #   extra_hosts:
+  #     - "host.docker.internal:host-gateway"
+
+  # Identity & Reputation Service (Placeholder - To be implemented)
+  # identity-reputation:
+  #   build:
+  #     context: ./services/identity-reputation
+  #     dockerfile: Dockerfile
+  #   container_name: nozama-identity-reputation
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3001:3001"
+  #   environment:
+  #     - NODE_ENV=${NODE_ENV:-production}
+  #     - PORT=3001
+  #     - BLOCKCHAIN_RPC_URL=${BLOCKCHAIN_RPC_URL:-http://host.docker.internal:8545}
+  #   networks:
+  #     - nozama-network
+  #   extra_hosts:
+  #     - "host.docker.internal:host-gateway"
+
+networks:
+  nozama-network:
+    driver: bridge
+
+volumes:
+  search-logs:
+    driver: local
+  # Add more volumes as services are added
+  # listing-logs:
+  #   driver: local
+  # order-logs:
+  #   driver: local
+  # payment-logs:
+  #   driver: local
+  # identity-logs:
+  #   driver: local
