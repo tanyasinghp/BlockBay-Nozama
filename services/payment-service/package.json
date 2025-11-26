@@ -17,6 +17,7 @@
     "express": "^4.18.2",
     "grpc-reflection-js": "^0.3.0",
     "mongoose": "^7.5.0",
+    "mongoose": "^7.8.7",
     "uuid": "^9.0.0"
   },
   "devDependencies": {

@@ -14,16 +14,7 @@ async function main() {
   );
 
   // ---------------------------
-  // 1. ProductRegistry
-  // ---------------------------
-  console.log("📦 Deploying ProductRegistry...");
-  const ProductRegistry = await hre.ethers.deployContract("ProductRegistry");
-  await ProductRegistry.waitForDeployment();
-  const productAddress = await ProductRegistry.getAddress();
-  console.log("✅ ProductRegistry:", productAddress);
-
-  // ---------------------------
-  // 2. Reputation
+  // 1. Reputation
   // ---------------------------
   console.log("\n⭐ Deploying Reputation...");
   const Reputation = await hre.ethers.deployContract("Reputation");
@@ -32,7 +23,7 @@ async function main() {
   console.log("✅ Reputation:", reputationAddress);
 
   // ---------------------------
-  // 3. ListingRegistry
+  // 2. ListingRegistry
   // ---------------------------
   console.log("\n🛒 Deploying ListingRegistry...");
   const ListingRegistry = await hre.ethers.deployContract("ListingRegistry");
@@ -41,7 +32,7 @@ async function main() {
   console.log("✅ ListingRegistry:", listingAddress);
 
   // ---------------------------
-  // 4. Escrow
+  // 3. Escrow
   // ---------------------------
   console.log("\n💸 Deploying Escrow...");
   const Escrow = await hre.ethers.deployContract("Escrow");
@@ -50,7 +41,7 @@ async function main() {
   console.log("✅ Escrow:", escrowAddress);
 
   // ---------------------------
-  // 5. OrderManager
+  // 4. OrderManager
   // ---------------------------
   console.log("\n📦 Deploying OrderManager...");
   const OrderManager = await hre.ethers.deployContract(
@@ -69,7 +60,6 @@ async function main() {
     chainId: 31337,
     deployedAt: new Date().toISOString(),
     contracts: {
-      ProductRegistry: { address: productAddress },
       Reputation: { address: reputationAddress },
       ListingRegistry: { address: listingAddress },
       Escrow: { address: escrowAddress },

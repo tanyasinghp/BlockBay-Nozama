@@ -12,11 +12,11 @@ export const config = {
   API_VERSION: process.env.API_VERSION || 'v1',
 
   // Database Configuration (MongoDB Atlas)
-  MONGODB_URI: process.env.MONGODB_URI || 'mongodb+srv://2024sl93104_db_user:<db_password>@nozama-data.q14xknz.mongodb.net/?appName=nozama-data',
+  MONGODB_URI: process.env.MONGODB_URI || 'mongodb+srv://2024sl93104_db_user:password@nozama-data.q14xknz.mongodb.net/?appName=nozama-data',
   MONGODB_DB_NAME: process.env.MONGODB_DB_NAME || 'nozama-data',
 
   // API Configuration
-  CORS_ORIGIN: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000'],
+  CORS_ORIGIN: process.env.CORS_ORIGIN?.split(',') || '*',
   RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10),
   RATE_LIMIT_MAX_REQUESTS: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10),
 

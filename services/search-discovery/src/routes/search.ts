@@ -54,8 +54,7 @@ router.get('/', async (req: Request, res: Response) => {
       ...(minPrice !== undefined && { price: { $gte: parseFloat(minPrice as string) } }),
       ...(maxPrice !== undefined && { price: { ...((minPrice !== undefined) ? { $gte: parseFloat(minPrice as string) } : {}), $lte: parseFloat(maxPrice as string) } }),
       ...(minReputation !== undefined && { 'seller.reputation': { $gte: parseInt(minReputation as string) } }),
-      ...(verified === 'true' && { 'seller.verified': true }),
-      isActive: true
+      ...(verified === 'true' && { 'seller.verified': true })
     });
 
     const totalPages = Math.ceil(totalCount / limitNum);
@@ -218,11 +217,10 @@ router.get('/products/:productId', async (req: Request, res: Response) => {
 
     const product = await Product.findOne({
       $or: [
-        { productId },
+        { listingId: productId },
         { 'blockchain.contractAddress': productId },
         { 'blockchain.tokenId': productId }
-      ],
-      isActive: true
+      ]
     });
 
     if (!product) {
@@ -271,8 +269,7 @@ router.get('/suggestions', async (req: Request, res: Response) => {
     // Get product name suggestions using text search
     const suggestions = await Product.find(
       {
-        $text: { $search: query as string },
-        isActive: true
+        $text: { $search: query as string }
       },
       { name: 1, category: 1, _id: 0 }
     )

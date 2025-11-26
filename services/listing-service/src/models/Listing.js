@@ -1,39 +1,37 @@
 const mongoose = require('mongoose');
+const { v4: uuidv4 } = require('uuid');
 
-const ListingSchema = new mongoose.Schema({
-  listingId: { type: String, unique: true },
-  name: String,
-  description: String,
-  category: String,
-  price: Number,
-  currency: { type: String, default: 'ETH' },
-  images: [{ cid: String, url: String }],
-  stock: { type: Number, default: 0 },
-  status: { type: String, enum: ['draft','published','archived'], default: 'draft' },
-  seller: {
-    address: String,
-    did: String,
-    name: String,
-    reputation: Number,
-    verified: Boolean
+const ListingSchema = new mongoose.Schema(
+  {
+    listingId: {
+      type: String,
+      required: true,
+      unique: true,
+      default: () => `lst_${uuidv4()}`,
+    },
+    name: { type: String, required: true },
+    description: { type: String, required: true },
+    category: { type: String, required: true },
+    price: { type: Number, required: true },
+    currency: { type: String, required: true, default: 'ETH' },
+    stock: { type: Number, required: true },
+    images: [{ type: String }],
+    seller: {
+      address: { type: String, required: true },
+      name: { type: String, required: true },
+    },
+    status: {
+      type: String,
+      enum: ['draft', 'published', 'sold_out', 'inactive'],
+      default: 'draft',
+    },
+    blockchain: {
+      network: String,
+      transactionHash: String,
+    },
+    ipfsCID: String,
   },
-  ipfsMetadata: { cid: String, url: String },
-  blockchain: {
-    network: String,
-    contractAddress: String,
-    tokenId: String,
-    transactionHash: String
-  },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
-});
+  { timestamps: true, collection: 'products' }
+);
 
-// Auto-generate listingId if missing
-ListingSchema.pre('save', function(next) {
-  if (!this.listingId) {
-    this.listingId = `lst_${Math.random().toString(36).substring(2, 10)}${Date.now().toString(36)}`;
-  }
-  next();
-});
-
-module.exports = mongoose.model('Listing', ListingSchema);
+module.exports = mongoose.model('Product', ListingSchema);

@@ -33,7 +33,7 @@ const getFreshWallet = () => {
 
 // Load contract ABIs
 const loadABI = (contractName) => {
-  const abiPath = path.join(__dirname, '../../../artifacts/contracts', `${contractName}.sol`, `${contractName}.json`);
+  const abiPath = path.join(process.cwd(), 'artifacts', 'contracts', 'contracts', `${contractName}.sol`, `${contractName}.json`);
   if (!fs.existsSync(abiPath)) {
     console.warn(`[WARN] ABI not found for ${contractName} at ${abiPath}`);
     return null;
@@ -52,7 +52,7 @@ if (deployment) {
   const escrowABI = loadABI('Escrow');
   const orderManagerABI = loadABI('OrderManager');
 
-  if (listingRegistryABI) {
+  if (listingRegistryABI && deployment.contracts.ListingRegistry) {
     listingRegistryContract = new ethers.Contract(
       deployment.contracts.ListingRegistry,
       listingRegistryABI,
@@ -60,7 +60,7 @@ if (deployment) {
     );
   }
 
-  if (escrowABI) {
+  if (escrowABI && deployment.contracts.Escrow) {
     escrowContract = new ethers.Contract(
       deployment.contracts.Escrow,
       escrowABI,
@@ -68,7 +68,7 @@ if (deployment) {
     );
   }
 
-  if (orderManagerABI) {
+  if (orderManagerABI && deployment.contracts.OrderManager) {
     orderManagerContract = new ethers.Contract(
       deployment.contracts.OrderManager,
       orderManagerABI,
@@ -86,4 +86,3 @@ module.exports = {
   orderManagerContract,
   deployment
 };
-
