@@ -51,6 +51,14 @@ exports.createEscrow = async (req, res, next) => {
       return res.status(400).json({ error: 'BadRequest', message: 'orderId, buyer.address, seller.address, amount required' });
     }
 
+    // ADD THIS VALIDATION HERE
+    if (!ethers.isAddress(buyer.address) || !ethers.isAddress(seller.address)) {
+      return res.status(400).json({
+        error: "BadRequest",
+        message: "Invalid Ethereum address for buyer or seller"
+      });
+    }
+
     const amountWei = ethers.parseEther(String(amount));
     // For demo purposes: server creates a wallet and signs the tx (buyer impersonation).
     // Production: return raw tx data for client to sign with wallet (MetaMask).

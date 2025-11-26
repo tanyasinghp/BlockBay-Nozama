@@ -21,6 +21,7 @@ async function startIndexer() {
   // EscrowCreated Event
   // -----------------------------
   escrowContract.on('EscrowCreated', async (escrowIdBytes, orderIdBytes, buyer, seller, amount, event) => {
+    console.log("[DEBUG EVENT] EscrowCreated triggered");
     try {
       const escrowId = normalizeIndexed(escrowIdBytes);
       const orderId = normalizeIndexed(orderIdBytes);
