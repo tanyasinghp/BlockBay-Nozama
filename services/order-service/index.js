@@ -7,6 +7,7 @@ const orderRoutes = require('./routes/orders');
 const listingRoutes = require('./routes/listings');
 const escrowRoutes = require('./routes/escrow');
 const healthRoute = require('./routes/health');
+const webhookRoutes = require('./routes/webhooks');
 
 const app = express();
 const PORT = process.env.PORT || 3003;
@@ -27,6 +28,7 @@ app.use('/api/v1/health', healthRoute);
 app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/listings', listingRoutes);
 app.use('/api/v1/escrow', escrowRoutes);
+app.use('/api/v1/webhooks', webhookRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
