@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # Search & Discovery Service
+  # Search & Discovery Service (GraphQL + REST API)
   search-discovery:
     build:
       context: ./services/search-discovery

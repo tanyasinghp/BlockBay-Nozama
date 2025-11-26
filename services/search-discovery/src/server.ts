@@ -4,6 +4,8 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware } from '@apollo/server/express4';
 
 import config from './config';
 import database from './config/database';
@@ -18,22 +20,48 @@ import categoryRoutes from './routes/categories';
 import healthRoutes from './routes/health';
 import Product from './models/Product';
 
+// GraphQL imports
+import { typeDefs } from './graphql/schema';
+import { resolvers } from './graphql/resolvers';
+import { createDataLoaders } from './graphql/dataloaders';
+
 class Server {
   public app: express.Application;
+  private apolloServer: ApolloServer | null = null;
 
   constructor() {
     this.app = express();
     this.initializeMiddleware();
-    this.initializeRoutes();
-    this.initializeErrorHandling();
+    // Routes will be initialized after GraphQL in start()
+  }
+
+  private async initializeGraphQL(): Promise<void> {
+    // Create Apollo Server
+    this.apolloServer = new ApolloServer({
+      typeDefs,
+      resolvers,
+      introspection: config.IS_DEVELOPMENT,
+      formatError: (formattedError, error) => {
+        logger.error('GraphQL Error:', formattedError);
+        return formattedError;
+      },
+    });
+
+    await this.apolloServer.start();
+    logger.info('🚀 GraphQL Apollo Server initialized');
   }
 
   private initializeMiddleware(): void {
-    // Security middleware
+    // Security middleware - adjusted for GraphQL
     this.app.use(helmet(
       config.IS_DEVELOPMENT 
-        ? { contentSecurityPolicy: false }
-        : {}
+        ? { 
+            contentSecurityPolicy: false,
+            crossOriginEmbedderPolicy: false 
+          }
+        : {
+            crossOriginEmbedderPolicy: false
+          }
     ));
 
     // CORS configuration
@@ -103,7 +131,31 @@ class Server {
     this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
   }
 
-  private initializeRoutes(): void {
+  private async initializeGraphQLMiddleware(): Promise<void> {
+    if (!this.apolloServer) {
+      throw new Error('Apollo Server not initialized');
+    }
+
+    // GraphQL endpoint with DataLoaders
+    this.app.use(
+      '/graphql',
+      cors<cors.CorsRequest>({
+        origin: config.CORS_ORIGIN,
+        credentials: true,
+      }),
+      express.json(),
+      expressMiddleware(this.apolloServer, {
+        context: async ({ req }) => ({
+          dataloaders: createDataLoaders(),
+          req,
+        }),
+      })
+    );
+
+    logger.info('📊 GraphQL endpoint configured at /graphql');
+  }
+
+  private initializeRoutesAndErrorHandling(): void {
     this.initializeSwagger();
     // API version prefix
     const apiPrefix = `/api/${config.API_VERSION}`;
@@ -111,7 +163,7 @@ class Server {
     // Health check endpoint (no API version prefix)
     this.app.use('/health', healthRoutes);
 
-    // API routes
+    // API routes (REST - legacy support)
     this.app.use(`${apiPrefix}/search`, searchRoutes);
     this.app.use(`${apiPrefix}/categories`, categoryRoutes);
 
@@ -124,9 +176,21 @@ class Server {
         timestamp: new Date().toISOString(),
         endpoints: {
           health: '/health',
+          graphql: '/graphql',
           search: `${apiPrefix}/search`,
           categories: `${apiPrefix}/categories`,
           documentation: `${apiPrefix}/docs`
+        },
+        features: {
+          graphql: {
+            endpoint: '/graphql',
+            playground: config.IS_DEVELOPMENT ? 'Available in development mode' : 'Disabled',
+            introspection: config.IS_DEVELOPMENT
+          },
+          rest: {
+            enabled: true,
+            version: config.API_VERSION
+          }
         }
       });
     });
@@ -136,7 +200,7 @@ class Server {
       res.redirect('/api-docs');
     });
 
-    // 404 handler for unknown routes
+    // 404 handler for unknown routes - MUST be last
     this.app.use('*', (req, res) => {
       res.status(404).json({
         error: {
@@ -146,9 +210,7 @@ class Server {
         }
       });
     });
-  }
 
-  private initializeErrorHandling(): void {
     // Global error handler
     this.app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
       logger.error('Unhandled error:', error);
@@ -203,6 +265,9 @@ class Server {
 
   public async start(): Promise<void> {
     try {
+      // Initialize GraphQL first
+      await this.initializeGraphQL();
+
       // Try to connect to database
       try {
         await database.connect();
@@ -211,6 +276,12 @@ class Server {
         logger.warn('⚠️ Database connection failed - running in demo mode');
         logger.warn('Note: MongoDB Atlas requires IP whitelisting. Add your IP to Atlas Network Access.');
       }
+
+      // Initialize GraphQL middleware BEFORE other routes
+      await this.initializeGraphQLMiddleware();
+      
+      // Now initialize routes and error handling (this includes 404 handler)
+      this.initializeRoutesAndErrorHandling();
 
       // Start server regardless of database connection
       this.app.listen(config.PORT, async () => {
@@ -225,8 +296,9 @@ class Server {
         logger.info(`📡 Server running on port ${config.PORT}`);
         logger.info(`🌍 Environment: ${config.NODE_ENV}`);
         logger.info(`🔗 Health check: http://localhost:${config.PORT}/health`);
-        logger.info(`📚 API docs: http://localhost:${config.PORT}/api/${config.API_VERSION}/docs`);
-        logger.info(`💡 API Structure: Fully implemented and ready for database connection`);
+        logger.info(`🎯 GraphQL endpoint: http://localhost:${config.PORT}/graphql`);
+        logger.info(`📚 REST API docs: http://localhost:${config.PORT}/api/${config.API_VERSION}/docs`);
+        logger.info(`💡 GraphQL + REST APIs: Both available for flexible integration`);
       });
     } catch (error) {
       logger.error('Failed to start server:', error);
@@ -236,6 +308,10 @@ class Server {
 
   public async stop(): Promise<void> {
     try {
+      if (this.apolloServer) {
+        await this.apolloServer.stop();
+        logger.info('🛑 Apollo Server stopped');
+      }
       await database.disconnect();
       logger.info('👋 Server stopped gracefully');
     } catch (error) {
