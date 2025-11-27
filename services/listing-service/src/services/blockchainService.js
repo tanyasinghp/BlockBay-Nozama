@@ -17,7 +17,7 @@ class BlockchainService {
 
       const deploymentPath = path.join(__dirname, '../../../../deployment.json');
       const deployment = JSON.parse(fs.readFileSync(deploymentPath, 'utf8'));
-      const listingRegistryAddress = deployment.contracts.ListingRegistry;
+      const listingRegistryAddress = deployment.contracts.ListingRegistry.address || deployment.contracts.ListingRegistry;
 
       const listingRegistryABI = this.loadABI('ListingRegistry');
 

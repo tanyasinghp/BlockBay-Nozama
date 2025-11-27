@@ -53,8 +53,29 @@ router.post('/', async (req, res, next) => {
     const receipt = await tx.wait();
     console.log(`[OK] Order created: ${orderId}, tx: ${receipt.hash}`);
 
-    // Fetch the created order
-    const order = await orderManagerContract.getOrder(orderId);
+    // Wait for blockchain state to settle
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Fetch the created order with retry logic
+    let order;
+    let retries = 5;
+    while (retries > 0) {
+      try {
+        order = await orderManagerContract.getOrder(orderId);
+        // Verify we got valid data
+        if (order && order.orderId && order.orderId === orderId) {
+          break;
+        }
+      } catch (error) {
+        console.log(`Retry fetching order ${orderId}, attempts left: ${retries - 1}`);
+        retries--;
+        if (retries === 0) {
+          throw new Error(`Failed to fetch order after creation: ${error.message}`);
+        }
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+    }
+    
     const listing = await listingRegistryContract.getListing(listingId);
 
     res.status(201).json({
@@ -470,4 +491,3 @@ function getOrderStatusEnum(status) {
 }
 
 module.exports = router;
-

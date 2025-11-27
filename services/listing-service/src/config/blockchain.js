@@ -3,11 +3,15 @@ const fs = require('fs');
 const path = require('path');
 
 // Load deployment info
-const deploymentPath = path.join(process.cwd(), 'deployment.json');
+const deploymentPath = path.join(__dirname, '..', '..', 'deployment.json');
 let deployment = null;
 
 if (fs.existsSync(deploymentPath)) {
   deployment = JSON.parse(fs.readFileSync(deploymentPath, 'utf8'));
+  console.log(`✅ Loaded deployment config from: ${deploymentPath}`);
+  console.log(`📝 ListingRegistry address: ${deployment.contracts.ListingRegistry}`);
+} else {
+  console.warn(`⚠️  Deployment file not found at: ${deploymentPath}`);
 }
 
 // Initialize provider
@@ -18,7 +22,7 @@ const wallet = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY || '0xac0974be
 
 // Load contract ABIs
 const loadABI = (contractName) => {
-  const abiPath = path.join(process.cwd(), 'artifacts', 'contracts', 'contracts', `${contractName}.sol`, `${contractName}.json`);
+  const abiPath = path.join(__dirname, '..', '..', 'artifacts', 'contracts', 'contracts', `${contractName}.sol`, `${contractName}.json`);
   if (!fs.existsSync(abiPath)) {
     console.warn(`[WARN] ABI not found for ${contractName} at ${abiPath}`);
     return null;
