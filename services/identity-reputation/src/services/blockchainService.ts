@@ -35,8 +35,9 @@ class BlockchainService {
           "event ReputationScoreUpdated(address indexed userAddress, string indexed did, uint256 oldScore, uint256 newScore, uint256 timestamp)"
         ];
         
+        const contractAddress = String(config.REPUTATION_CONTRACT_ADDRESS);
         this.reputationContract = new ethers.Contract(
-          config.REPUTATION_CONTRACT_ADDRESS,
+          contractAddress,
           reputationABI,
           this.provider
         );

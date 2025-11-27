@@ -1,8 +1,26 @@
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 
 // Load environment variables
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
+// Load contract deployments
+let deployments: any = {};
+try {
+  // From services/identity-reputation/src/config -> ../../../../contracts/deployments.json
+  const deploymentsPath = path.resolve(__dirname, '../../../../contracts/deployments.json');
+  if (fs.existsSync(deploymentsPath)) {
+    deployments = JSON.parse(fs.readFileSync(deploymentsPath, 'utf8'));
+    console.log('✅ Loaded contract deployments:', deployments.contracts);
+    console.log('🔍 Reputation address type:', typeof deployments?.contracts?.Reputation?.address);
+    console.log('🔍 Reputation address value:', deployments?.contracts?.Reputation?.address);
+  } else {
+    console.warn('❌ Deployments file not found at:', deploymentsPath);
+  }
+} catch (error) {
+  console.warn('Could not load contract deployments:', error);
+}
 
 export const config = {
   // Server Configuration
@@ -17,7 +35,7 @@ export const config = {
 
   // Blockchain Configuration
   BLOCKCHAIN_RPC_URL: process.env.BLOCKCHAIN_RPC_URL || 'http://127.0.0.1:8545',
-  REPUTATION_CONTRACT_ADDRESS: process.env.REPUTATION_CONTRACT_ADDRESS,
+  REPUTATION_CONTRACT_ADDRESS: process.env.REPUTATION_CONTRACT_ADDRESS || String(deployments?.contracts?.Reputation?.address || ''),
   
   // Admin and Security
   WEBHOOK_SECRET: process.env.WEBHOOK_SECRET || 'your_webhook_secret_here',
