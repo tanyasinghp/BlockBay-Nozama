@@ -59,10 +59,9 @@ export const typeDefs = `
     category: String!
     tags: [String!]!
     price: Float!
-    currency: String!
-    seller: Seller!
-    images: [String!]!
-    blockchain: BlockchainInfo!
+    currency: String
+    seller: Seller
+    blockchain: BlockchainInfo
     views: Int!
     sales: Int!
     rating: Float
