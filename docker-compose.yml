@@ -60,23 +60,41 @@ services:
   #   extra_hosts:
   #     - "host.docker.internal:host-gateway"
 
-  # Order Service (Placeholder - To be implemented)
-  # order-service:
-  #   build:
-  #     context: ./services/order-service
-  #     dockerfile: Dockerfile
-  #   container_name: nozama-order-service
-  #   restart: unless-stopped
-  #   ports:
-  #     - "3003:3003"
-  #   environment:
-  #     - NODE_ENV=${NODE_ENV:-production}
-  #     - PORT=3003
-  #     - BLOCKCHAIN_RPC_URL=${BLOCKCHAIN_RPC_URL:-http://host.docker.internal:8545}
-  #   networks:
-  #     - nozama-network
-  #   extra_hosts:
-  #     - "host.docker.internal:host-gateway"
+  # Order Service
+  order-service:
+    build:
+      context: ./services/order-service
+      dockerfile: Dockerfile
+    container_name: nozama-order-service
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=3003
+      - BLOCKCHAIN_RPC_URL=${BLOCKCHAIN_RPC_URL:-http://host.docker.internal:8545}
+      - CHAIN_ID=${CHAIN_ID:-31337}
+      - DEPLOYER_PRIVATE_KEY=${DEPLOYER_PRIVATE_KEY:-0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80}
+      - LISTING_REGISTRY_ADDRESS=${LISTING_REGISTRY_ADDRESS}
+      - ESCROW_CONTRACT_ADDRESS=${ESCROW_CONTRACT_ADDRESS}
+      - ORDER_MANAGER_ADDRESS=${ORDER_MANAGER_ADDRESS}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000,http://localhost:5173}
+    networks:
+      - nozama-network
+    volumes:
+      - order-logs:/app/logs
+      - ./contracts/artifacts:/app/contracts/artifacts:ro
+      - ./deployment.json:/app/deployment.json:ro
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3003/api/v1/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); })"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - search-discovery
 
   # Payment Service (Placeholder - To be implemented)
   # payment-service:
@@ -121,10 +139,10 @@ networks:
 volumes:
   search-logs:
     driver: local
+  order-logs:
+    driver: local
   # Add more volumes as services are added
   # listing-logs:
-  #   driver: local
-  # order-logs:
   #   driver: local
   # payment-logs:
   #   driver: local
