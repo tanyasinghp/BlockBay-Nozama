@@ -41,24 +41,22 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  # Listing Service (Placeholder - To be implemented)
-  # listing-service:
-  #   build:
-  #     context: ./services/listing-service
-  #     dockerfile: Dockerfile
-  #   container_name: nozama-listing-service
-  #   restart: unless-stopped
-  #   ports:
-  #     - "3004:3004"
-  #   environment:
-  #     - NODE_ENV=${NODE_ENV:-production}
-  #     - PORT=3004
-  #     - MONGODB_URI=${MONGODB_URI}
-  #     - BLOCKCHAIN_RPC_URL=${BLOCKCHAIN_RPC_URL:-http://host.docker.internal:8545}
-  #   networks:
-  #     - nozama-network
-  #   extra_hosts:
-  #     - "host.docker.internal:host-gateway"
+  # Listing Service
+  listing-service:
+    build:
+      context: .
+      dockerfile: services/listing-service/Dockerfile
+    container_name: nozama-listing-service
+    restart: unless-stopped
+    ports:
+      - "3004:3004"
+    env_file:
+      - ./services/listing-service/.env
+    networks:
+      - nozama-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
 
   # Order Service
   order-service:

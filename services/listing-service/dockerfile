@@ -1,0 +1,24 @@
+# services/listing-service/dockerfile
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY services/listing-service/package*.json ./
+RUN npm ci --omit=dev
+COPY services/listing-service/ ./
+RUN if grep -q '"build"' package.json 2>/dev/null; then npm run build; else echo "no build script: skipping build"; fi
+
+FROM node:20-alpine AS runtime
+WORKDIR /app
+
+# install CA certificates so TLS to MongoDB Atlas works
+RUN apk add --no-cache ca-certificates
+
+COPY services/listing-service/ ./
+COPY deployment.json /deployment.json
+COPY artifacts/ ./artifacts/
+
+COPY --from=builder /app/package*.json ./
+RUN npm ci --omit=dev --production
+
+ENV NODE_ENV=production
+EXPOSE 3004
+CMD ["node", "src/index.js"]
