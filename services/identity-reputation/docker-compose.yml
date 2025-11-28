@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: nozama-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=nozama-identity
+    volumes:
+      - mongodb_data:/data/db
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - nozama-network
+    restart: unless-stopped
+
+  identity-reputation:
+    image: nozama-identity-reputation
+    container_name: nozama-identity-reputation
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - MONGODB_URI=mongodb://mongodb:27017/nozama-identity
+      - MONGODB_DB_NAME=nozama-identity
+      - BLOCKCHAIN_RPC_URL=http://host.docker.internal:8545
+      - REPUTATION_CONTRACT_ADDRESS=${REPUTATION_CONTRACT_ADDRESS:-0x0000000000000000000000000000000000000000}
+      - ADMIN_API_KEY=${ADMIN_API_KEY:-admin-secret-key}
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET:-webhook-secret}
+      - LOG_LEVEL=info
+    depends_on:
+      - mongodb
+    networks:
+      - nozama-network
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+
+networks:
+  nozama-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:

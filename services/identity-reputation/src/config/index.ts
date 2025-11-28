@@ -26,7 +26,7 @@ export const config = {
   // Server Configuration
   SERVICE_NAME: 'nozama-identity-reputation-api',
   NODE_ENV: process.env.NODE_ENV || 'development',
-  PORT: parseInt(process.env.PORT || '3004', 10),
+  PORT: parseInt(process.env.PORT || '3001', 10),
   API_VERSION: process.env.API_VERSION || 'v1',
 
   // Database Configuration (MongoDB Atlas)
