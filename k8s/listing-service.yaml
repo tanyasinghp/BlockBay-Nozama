@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: listing-service
+  namespace: nozama
+  labels:
+    app: listing-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: listing-service
+  template:
+    metadata:
+      labels:
+        app: listing-service
+    spec:
+      containers:
+      - name: listing-service
+        image: aarushi02singh/listing-service:latest
+        ports:
+        - containerPort: 3004
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "3004"
+        - name: MONGODB_URI
+          value: "mongodb://mongodb-service:27017/nozama-listing"
+        - name: DATABASE_URL
+          value: "mongodb://mongodb-service:27017/nozama-listing"
+        - name: BLOCKCHAIN_RPC_URL
+          value: "http://hardhat-service:8545"
+        - name: CHAIN_ID
+          value: "31337"
+        - name: DEPLOYER_PRIVATE_KEY
+          value: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+        - name: CORS_ORIGIN
+          value: "http://localhost:3000,http://localhost:5173"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3004
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3004
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: listing-service
+  namespace: nozama
+  labels:
+    app: listing-service
+spec:
+  selector:
+    app: listing-service
+  ports:
+  - port: 3004
+    targetPort: 3004
+  type: ClusterIP
