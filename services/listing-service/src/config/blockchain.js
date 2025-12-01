@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Load deployment info
-const deploymentPath = path.join(__dirname, '..', '..', 'deployment.json');
+const deploymentPath = path.join(__dirname, '../../../contracts/deployments.json');
 let deployment = null;
 
 if (fs.existsSync(deploymentPath)) {

@@ -15,7 +15,7 @@ class BlockchainService {
       const providerUrl = process.env.BLOCKCHAIN_RPC_URL || 'http://127.0.0.1:8545/';
       this.provider = new ethers.JsonRpcProvider(providerUrl);
 
-      const deploymentPath = path.join(__dirname, '../../../../deployment.json');
+      const deploymentPath = path.join(__dirname, '../../../../contracts/deployments.json');
       const deployment = JSON.parse(fs.readFileSync(deploymentPath, 'utf8'));
       const listingRegistryAddress = deployment.contracts.ListingRegistry.address || deployment.contracts.ListingRegistry;
 

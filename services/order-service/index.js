@@ -29,7 +29,7 @@ app.use((req, res, next) => {
 app.use('/api/v1/health', healthRoute);
 app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/listings', listingRoutes);
-app.use('/api/v1/escrow', escrowRoutes);
+// app.use('/api/v1/escrow', escrowRoutes);
 app.use('/api/v1/webhooks', webhookRoutes);
 
 // Error handling middleware

@@ -1,9 +1,10 @@
 // src/index.js
+require("dotenv").config();
+console.log("🔑 ENV LOADED - BUYER_PRIVATE_KEY =", process.env.BUYER_PRIVATE_KEY);
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const connectMongo = require('./config/database');
-require('dotenv').config();
 
 const escrowRoutes = require('./routes/escrow.routes');
 const { startIndexer } = require('./services/indexer');
