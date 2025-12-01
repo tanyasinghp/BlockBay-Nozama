@@ -1,7 +1,9 @@
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-require('dotenv').config();
+
 
 const orderRoutes = require('./routes/orders');
 const listingRoutes = require('./routes/listings');
@@ -74,6 +76,8 @@ app.listen(PORT, () => {
   console.log(`   POST   /api/v1/orders/:orderId/cancel`);
   console.log(`   GET    /api/v1/escrow/:escrowId`);
   console.log('\nReady to accept requests!\n');
+  console.log("Blockchain RPC:", process.env.BLOCKCHAIN_RPC_URL);
+
 });
 
 module.exports = app;

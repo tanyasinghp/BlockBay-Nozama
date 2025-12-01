@@ -94,23 +94,40 @@ services:
     depends_on:
       - search-discovery
 
-  # Payment Service (Placeholder - To be implemented)
-  # payment-service:
-  #   build:
-  #     context: ./services/payment-service
-  #     dockerfile: Dockerfile
-  #   container_name: nozama-payment-service
-  #   restart: unless-stopped
-  #   ports:
-  #     - "3005:3005"
-  #   environment:
-  #     - NODE_ENV=${NODE_ENV:-production}
-  #     - PORT=3005
-  #     - BLOCKCHAIN_RPC_URL=${BLOCKCHAIN_RPC_URL:-http://host.docker.internal:8545}
-  #   networks:
-  #     - nozama-network
-  #   extra_hosts:
-  #     - "host.docker.internal:host-gateway"
+  # Payment Service
+  payment-service:
+    build:
+      context: ./services/payment-service
+      dockerfile: dockerfile
+    container_name: nozama-payment-service
+    restart: unless-stopped
+    ports:
+      - "3005:3005"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=3005
+      - BLOCKCHAIN_RPC_URL=${BLOCKCHAIN_RPC_URL:-http://host.docker.internal:8545}
+      - CHAIN_ID=${CHAIN_ID:-31337}
+      - DEPLOYER_PRIVATE_KEY=${DEPLOYER_PRIVATE_KEY:-0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80}
+      - ESCROW_CONTRACT_ADDRESS=${ESCROW_CONTRACT_ADDRESS}
+      - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/nozama-payment}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000,http://localhost:5173}
+    networks:
+      - nozama-network
+    volumes:
+      - payment-logs:/app/logs
+      - ./contracts/artifacts:/app/contracts/artifacts:ro
+      - ./deployment.json:/app/deployment.json:ro
+    depends_on:
+      - mongodb
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3005/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1); })"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   # MongoDB Database (shared by identity-reputation and other services)
   mongodb:
@@ -186,8 +203,7 @@ volumes:
     driver: local
   mongodb_data:
     driver: local
-  # Add more volumes as services are added
-  # listing-logs:
-  #   driver: local
-  # payment-logs:
-  #   driver: local
+  payment-logs:
+    driver: local
+  listing-logs:
+    driver: local
