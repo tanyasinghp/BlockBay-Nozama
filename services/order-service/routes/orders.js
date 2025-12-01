@@ -4,6 +4,8 @@ const { ethers } = require('ethers');
 const { v4: uuidv4 } = require('uuid');
 const { orderManagerContract, listingRegistryContract, getFreshWallet } = require('../config/blockchain');
 
+const escrowClient = require('../grpc/escrowClient');
+
 /**
  * POST /api/v1/orders
  * Create a new order (without payment)
@@ -28,7 +30,6 @@ router.post('/', async (req, res, next) => {
       });
     }
 
-    // Validate quantity
     if (quantity <= 0) {
       return res.status(400).json({
         error: 'BadRequest',
@@ -37,79 +38,68 @@ router.post('/', async (req, res, next) => {
       });
     }
 
-    // Generate order ID
     const orderId = `ord_${Date.now()}_${uuidv4().substring(0, 8)}`;
 
-    // Get fresh wallet for this transaction
+    console.log("🧾 Creating order on-chain:", { orderId, listingId, quantity, buyerAddress });
+
     const buyerWallet = getFreshWallet();
-    
-    // Create order on blockchain
-    const tx = await orderManagerContract.connect(buyerWallet).createOrder(
-      orderId,
-      listingId,
-      quantity
-    );
-    
+
+    const tx = await orderManagerContract
+      .connect(buyerWallet)
+      .createOrder(orderId, listingId, quantity);
+
     const receipt = await tx.wait();
-    console.log(`[OK] Order created: ${orderId}, tx: ${receipt.hash}`);
+    console.log(`[OK] Order created on-chain: ${orderId}, tx: ${receipt.hash}`);
 
-    // Wait for blockchain state to settle
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    // Fetch the created order with retry logic
-    let order;
-    let retries = 5;
-    while (retries > 0) {
-      try {
-        order = await orderManagerContract.getOrder(orderId);
-        // Verify we got valid data
-        if (order && order.orderId && order.orderId === orderId) {
-          break;
-        }
-      } catch (error) {
-        console.log(`Retry fetching order ${orderId}, attempts left: ${retries - 1}`);
-        retries--;
-        if (retries === 0) {
-          throw new Error(`Failed to fetch order after creation: ${error.message}`);
-        }
-        await new Promise(resolve => setTimeout(resolve, 300));
-      }
+    let orderOnChain = null;
+    try {
+      console.log("🔍 Fetching order from chain with getOrder:", orderId);
+      orderOnChain = await orderManagerContract.getOrder(orderId);
+    } catch (err) {
+      console.error("⚠️ getOrder failed, returning minimal order response:", err);
     }
-    
-    const listing = await listingRegistryContract.getListing(listingId);
 
-    res.status(201).json({
-      orderId: order.orderId,
-      listingId: order.listingId,
-      buyer: {
-        address: order.buyer,
-        did: `did:ethr:${order.buyer}`
-      },
-      seller: {
-        address: order.seller,
-        did: `did:ethr:${order.seller}`
-      },
-      quantity: Number(order.quantity),
-      totalAmount: ethers.formatEther(order.totalAmount),
-      totalAmountWei: order.totalAmount.toString(),
-      currency: listing.currency,
-      status: getOrderStatus(order.status),
-      blockchain: {
-        network: 'localhost',
-        transactionHash: receipt.hash,
-        blockNumber: receipt.blockNumber
-      },
-      createdAt: new Date(Number(order.createdAt) * 1000).toISOString(),
-      updatedAt: new Date(Number(order.updatedAt) * 1000).toISOString()
-    });
-  } catch (error) {
-    if (error.message.includes('Insufficient stock')) {
-      return res.status(400).json({
-        error: 'InsufficientStock',
-        message: 'Not enough stock available for this order',
-        timestamp: new Date().toISOString()
+    // If getOrder worked, use full on-chain data
+    if (orderOnChain) {
+      const listing = await listingRegistryContract.getListing(listingId);
+
+      return res.status(201).json({
+        orderId: orderOnChain.orderId,
+        listingId: orderOnChain.listingId,
+        buyer: {
+          address: orderOnChain.buyer,
+          did: `did:ethr:${orderOnChain.buyer}`
+        },
+        seller: {
+          address: orderOnChain.seller,
+          did: `did:ethr:${orderOnChain.seller}`
+        },
+        quantity: Number(orderOnChain.quantity),
+        totalAmount: ethers.formatEther(orderOnChain.totalAmount),
+        totalAmountWei: orderOnChain.totalAmount.toString(),
+        currency: listing.currency,
+        status: getOrderStatus(orderOnChain.status),
+        blockchain: {
+          network: 'localhost',
+          transactionHash: receipt.hash,
+          blockNumber: receipt.blockNumber
+        },
+        createdAt: new Date(Number(orderOnChain.createdAt) * 1000).toISOString(),
+        updatedAt: new Date(Number(orderOnChain.updatedAt) * 1000).toISOString()
       });
     }
+
+    // Fallback: minimal response if getOrder() is being weird
+    return res.status(201).json({
+      orderId,
+      listingId,
+      quantity,
+      buyer: { address: buyerAddress },
+      status: "pending",
+      note: "On-chain createOrder succeeded, but getOrder decoding failed – using fallback payload."
+    });
+  } catch (error) {
+    console.error("❌ Error inside POST /orders:", error);
     next(error);
   }
 });
@@ -145,7 +135,7 @@ router.get('/', async (req, res, next) => {
       try {
         const orderId = await orderManagerContract.orderIds(i);
         const order = await orderManagerContract.getOrder(orderId);
-        
+
         // Apply filters
         if (buyer && order.buyer.toLowerCase() !== buyer.toLowerCase()) continue;
         if (seller && order.seller.toLowerCase() !== seller.toLowerCase()) continue;
@@ -255,63 +245,74 @@ router.get('/:orderId', async (req, res, next) => {
  * POST /api/v1/orders/:orderId/pay
  * Pay for an order and create escrow
  */
-router.post('/:orderId/pay', async (req, res, next) => {
-  try {
-    if (!orderManagerContract) {
-      return res.status(503).json({
-        error: 'ServiceUnavailable',
-        message: 'OrderManager contract not initialized',
-        timestamp: new Date().toISOString()
-      });
-    }
+// router.post('/:orderId/pay', async (req, res, next) => {
+//   try {
+//     const { orderId } = req.params;
 
+//     console.log("💳 PAY endpoint called for order:", orderId);
+
+//     // call to gRPC coming later
+//     res.json({
+//       orderId,
+//       status: "paid",
+//       message: "Payment method triggered successfully (mock response)"
+//     });
+
+//   } catch (error) {
+//     console.error("❌ Error inside /pay route:", error);
+//     next(error);
+//   }
+// });
+
+
+router.post("/:orderId/pay", async (req, res, next) => {
+  try {
+    console.log("🚀 /pay endpoint HIT!", req.params.orderId);
     const { orderId } = req.params;
 
-    // Get order details
-    const order = await orderManagerContract.getOrder(orderId);
+    console.log("💳 PAY endpoint called for order:", orderId);
 
-    if (getOrderStatus(order.status) !== 'pending') {
-      return res.status(400).json({
-        error: 'BadRequest',
-        message: 'Order is not in pending status',
-        timestamp: new Date().toISOString()
-      });
-    }
+    // TEMP MOCK order data (next we store in DB after Pay is done)
+    const order = {
+      orderId,
+      buyer: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",      // hardhat account 0
+      seller: "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",     // hardhat account 1
+      amount: "1.2"  // ETH value (NOT IN WEI - convert later)
+    };
 
-    // Pay for the order (using buyer's wallet in production)
-    const buyerWallet = getFreshWallet();
-    
-    const tx = await orderManagerContract.connect(buyerWallet).payOrder(orderId, {
-      value: order.totalAmount
+    console.log("📨 Calling CreateEscrow gRPC with:", {
+      orderId: order.orderId,
+      buyer: order.buyer,
+      seller: order.seller,
+      amount: order.amount
     });
 
-    const receipt = await tx.wait();
-    console.log(`[OK] Order paid: ${orderId}, tx: ${receipt.hash}`);
-
-    // Get updated order
-    const updatedOrder = await orderManagerContract.getOrder(orderId);
-
-    res.json({
-      orderId: updatedOrder.orderId,
-      status: getOrderStatus(updatedOrder.status),
-      escrowId: updatedOrder.escrowId,
-      totalAmount: ethers.formatEther(updatedOrder.totalAmount),
-      blockchain: {
-        network: 'localhost',
-        transactionHash: receipt.hash,
-        blockNumber: receipt.blockNumber
+    // gRPC call to Payment/Escrow service
+    escrowClient.CreateEscrow(
+      {
+        orderId: order.orderId,
+        buyer: order.buyer,
+        seller: order.seller,
+        amount: order.amount
       },
-      message: 'Payment successful and escrow created',
-      updatedAt: new Date(Number(updatedOrder.updatedAt) * 1000).toISOString()
-    });
+      (err, response) => {
+        if (err) {
+          console.error("❌ gRPC Error:", err);
+          return res.status(500).json({ error: "GRPC_ERROR", message: err.message });
+        }
+
+        console.log("📩 gRPC Response:", response);
+
+        return res.json({
+          orderId,
+          escrowId: response.escrowId,
+          status: "paid",
+          message: "Escrow created via payment-service gRPC"
+        });
+      }
+    );
   } catch (error) {
-    if (error.message.includes('Incorrect payment amount')) {
-      return res.status(400).json({
-        error: 'InvalidPaymentAmount',
-        message: 'Payment amount does not match order total',
-        timestamp: new Date().toISOString()
-      });
-    }
+    console.error("❌ Router error:", error);
     next(error);
   }
 });
@@ -381,46 +382,107 @@ router.put('/:orderId/status', async (req, res, next) => {
  * POST /api/v1/orders/:orderId/confirm-delivery
  * Confirm delivery and release escrow to seller
  */
+// router.post('/:orderId/confirm-delivery', async (req, res, next) => {
+//   try {
+//     if (!orderManagerContract) {
+//       return res.status(503).json({
+//         error: 'ServiceUnavailable',
+//         message: 'OrderManager contract not initialized',
+//         timestamp: new Date().toISOString()
+//       });
+//     }
+
+//     const { orderId } = req.params;
+
+//     // Confirm delivery (in production, verify caller is the buyer)
+//     // NEW CODE via gRPC
+//     const escrowClient = require('../grpc/escrowClient');
+
+//     escrowClient.ReleaseEscrow({ escrowId: order.escrowId }, (err, response) => {
+//       if (err) return next(err);
+
+//       res.json({
+//         orderId,
+//         escrowId: response.escrowId,
+//         status: "released",
+//         message: "Escrow released — seller will receive payment"
+//       });
+//     });
+
+//     // Get updated order
+//     const updatedOrder = await orderManagerContract.getOrder(orderId);
+
+//     res.json({
+//       orderId: updatedOrder.orderId,
+//       status: getOrderStatus(updatedOrder.status),
+//       message: 'Delivery confirmed and payment released to seller',
+//       blockchain: {
+//         transactionHash: receipt.hash,
+//         blockNumber: receipt.blockNumber
+//       },
+//       updatedAt: new Date(Number(updatedOrder.updatedAt) * 1000).toISOString()
+//     });
+//   } catch (error) {
+//     if (error.message.includes('Order must be shipped')) {
+//       return res.status(400).json({
+//         error: 'BadRequest',
+//         message: 'Order must be in shipped status to confirm delivery',
+//         timestamp: new Date().toISOString()
+//       });
+//     }
+//     next(error);
+//   }
+// });
+/**
+ * POST /api/v1/orders/:orderId/confirm-delivery
+ * Confirm delivery and release escrow to seller via gRPC + listen via webhook
+ *
+ * Body: { "escrowId": "escrow_..." }
+ */
 router.post('/:orderId/confirm-delivery', async (req, res, next) => {
   try {
-    if (!orderManagerContract) {
-      return res.status(503).json({
-        error: 'ServiceUnavailable',
-        message: 'OrderManager contract not initialized',
-        timestamp: new Date().toISOString()
-      });
-    }
-
     const { orderId } = req.params;
+    const { escrowId } = req.body;
 
-    // Confirm delivery (in production, verify caller is the buyer)
-    const buyerWallet = getFreshWallet();
-    
-    const tx = await orderManagerContract.connect(buyerWallet).confirmDeliveryAndRelease(orderId);
-    const receipt = await tx.wait();
-    console.log(`[OK] Delivery confirmed and escrow released: ${orderId}, tx: ${receipt.hash}`);
+    console.log('🚀 /confirm-delivery HIT!', { orderId, escrowId });
 
-    // Get updated order
-    const updatedOrder = await orderManagerContract.getOrder(orderId);
-
-    res.json({
-      orderId: updatedOrder.orderId,
-      status: getOrderStatus(updatedOrder.status),
-      message: 'Delivery confirmed and payment released to seller',
-      blockchain: {
-        transactionHash: receipt.hash,
-        blockNumber: receipt.blockNumber
-      },
-      updatedAt: new Date(Number(updatedOrder.updatedAt) * 1000).toISOString()
-    });
-  } catch (error) {
-    if (error.message.includes('Order must be shipped')) {
+    if (!escrowId) {
       return res.status(400).json({
         error: 'BadRequest',
-        message: 'Order must be in shipped status to confirm delivery',
+        message: 'escrowId is required in request body',
         timestamp: new Date().toISOString()
       });
     }
+
+    console.log('📨 Calling gRPC ReleaseEscrow with:', { escrowId });
+
+    // gRPC call to payment-service (escrow)
+    escrowClient.ReleaseEscrow({ escrowId }, (err, response) => {
+      if (err) {
+        console.error('❌ gRPC ReleaseEscrow Error:', err);
+        return res.status(500).json({
+          error: 'GRPC_ERROR',
+          message: err.message
+        });
+      }
+
+      console.log('📩 gRPC ReleaseEscrow Response:', response);
+
+      // 🔔 At this point:
+      // - Escrow contract emits EscrowReleased
+      // - payment-service indexer picks it up
+      // - payment-service calls webhooks (one of them is order-service /api/v1/webhooks/escrow-events)
+
+      return res.json({
+        orderId,
+        escrowId,
+        status: 'delivered',
+        escrowStatus: response.status,
+        message: 'Delivery confirmed – escrow release triggered via gRPC'
+      });
+    });
+  } catch (error) {
+    console.error('❌ /confirm-delivery router error:', error);
     next(error);
   }
 });
@@ -442,9 +504,20 @@ router.post('/:orderId/cancel', async (req, res, next) => {
     const { orderId } = req.params;
     const { reason } = req.body;
 
-    const tx = await orderManagerContract.cancelOrderAndRefund(orderId, reason || 'Cancelled by user');
-    const receipt = await tx.wait();
-    console.log(`[OK] Order cancelled: ${orderId}, tx: ${receipt.hash}`);
+    // NEW CODE via gRPC
+    const escrowClient = require('../grpc/escrowClient');
+
+    escrowClient.RefundEscrow({ escrowId: order.escrowId }, (err, response) => {
+      if (err) return next(err);
+
+      res.json({
+        orderId,
+        escrowId: response.escrowId,
+        status: "refunded",
+        message: "Order cancelled and escrow refunded"
+      });
+    });
+
 
     // Get updated order
     const updatedOrder = await orderManagerContract.getOrder(orderId);
@@ -491,3 +564,4 @@ function getOrderStatusEnum(status) {
 }
 
 module.exports = router;
+

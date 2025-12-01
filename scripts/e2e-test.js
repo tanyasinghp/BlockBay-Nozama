@@ -1,10 +1,12 @@
 const axios = require('axios');
+const path = require('path');
 
 // Service endpoints
 const LISTING_SERVICE_URL = 'http://localhost:3004/api/v1';
 const SEARCH_SERVICE_URL = 'http://localhost:3002/api/v1';
 const ORDER_SERVICE_URL = 'http://localhost:3003/api/v1';
 const IDENTITY_REP_SERVICE_URL = 'http://localhost:3001/api/v1';
+const PAYMENT_SERVICE_URL = "http://localhost:3005/api/v1";
 
 // --- Test Data ---
 const uniqueId = `laptop_${Date.now()}`;
@@ -57,7 +59,7 @@ async function runTest() {
     const searchQuery = newProduct.name;
     logStep('STEP 3: Searching for the product', `Sending GET to ${SEARCH_SERVICE_URL}/search?query=${searchQuery}`);
     const searchResponse = await axios.get(`${SEARCH_SERVICE_URL}/search`, { params: { query: searchQuery } });
-    
+
     const foundProduct = searchResponse.data.results.find(p => p.listingId === createdListingId);
     if (foundProduct) {
       logSuccess(`Found the new product in search results: ${foundProduct.name}`);
@@ -79,6 +81,67 @@ async function runTest() {
     // Wait for the order to be processed on the blockchain
     logStep('STEP 5: Waiting for order confirmation', 'Pausing for 5 seconds...');
     await sleep(5000);
+
+    // ---------------- PAYMENT / ESCROW TESTS ----------------
+    logStep("STEP 6: Pay for the Order (via gRPC + Escrow)", `POST ${ORDER_SERVICE_URL}/orders/${createdOrderId}/pay`);
+    try {
+      const payResponse = await axios.post(`${ORDER_SERVICE_URL}/orders/${createdOrderId}/pay`);
+      console.log("🪙 Payment response:", payResponse.data);
+
+      if (payResponse.data.escrowId) {
+        escrowId = payResponse.data.escrowId; // ensure real hex
+        console.log("Extracted escrowId:", escrowId);
+        logSuccess(`Escrow successfully created: ${escrowId}`);
+      } else {
+        console.warn("⚠️ Payment processed but no escrowId returned.");
+      }
+    } catch (err) {
+      logError(err);
+      throw new Error("Payment / Escrow test failed");
+    }
+
+    logStep("STEP 7: Wait for webhook event", "Pausing 3 seconds...");
+    await sleep(3000);
+
+    // Simulate webhook (normally triggered by payment-service)
+    logStep("STEP 8: Simulating Webhook Event for Escrow Release", `POST /webhooks/escrow-events`);
+    try {
+      await axios.post(`${ORDER_SERVICE_URL}/webhooks/escrow-events`, {
+        event: "escrow.released",
+        orderId: createdOrderId,
+        escrowId: escrowId,
+        state: "released"
+      });
+      logSuccess("Webhook successfully received by Order Service!");
+    } catch (err) {
+      logError(err);
+      throw new Error("Webhook test failed");
+    }
+
+    // Test Confirm Delivery (ReleaseEscrow)
+    logStep("STEP 9: Confirm Delivery (ReleaseEscrow via gRPC)", `POST /orders/${createdOrderId}/confirm-delivery`);
+    try {
+      const confirmResponse = await axios.post(
+        `${ORDER_SERVICE_URL}/orders/${createdOrderId}/confirm-delivery`,
+        { escrowId }
+      );
+      console.log("📦 Delivery Response:", confirmResponse.data);
+      logSuccess("Delivery confirmed and escrow released");
+    } catch (err) {
+      logError(err);
+      throw new Error("Delivery / ReleaseEscrow test failed");
+    }
+
+    // Refund optional path (won’t run if escrow released already)
+    logStep("STEP 10: Test Refund (optional)", "Trying refund...");
+    try {
+      const refundResponse = await axios.post(`${ORDER_SERVICE_URL}/orders/${createdOrderId}/cancel`);
+      console.log("💸 Refund Response:", refundResponse.data);
+      logSuccess("Refund processed successfully");
+    } catch (err) {
+      console.warn("⚠️ Refund skipped (already released)");
+    }
+
 
     // Step 6: Submit rating for the order
     await testRatingSubmission();

@@ -3,6 +3,25 @@
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const net = require('net');   // 👈 ADDED HERE
+
+async function waitForPort(port, retries = 10) {
+  return new Promise((resolve, reject) => {
+    const tryConnect = () => {
+      const socket = net.createConnection(port, 'localhost');
+      socket.on('connect', () => {
+        socket.end();
+        resolve();
+      });
+      socket.on('error', () => {
+        if (retries === 0) return reject(new Error(`Port ${port} not ready`));
+        retries--;
+        setTimeout(tryConnect, 500);
+      });
+    };
+    tryConnect();
+  });
+}
 
 console.log('🚀 Starting Nozama Decentralized E-Commerce Platform...\n');
 
@@ -53,6 +72,7 @@ const services = [
     args: ['run', 'dev'],
     cwd: path.join(process.cwd(), 'services/payment-service'),
     port: 3005,
+    grpcPort: 50051,  // 👈 Added for clarity
     color: '\x1b[31m' // Red
   },
   {
@@ -95,18 +115,18 @@ function sleep(ms) {
 
 async function installDependencies() {
   console.log('📦 Installing dependencies...\n');
-  
+
   // Root dependencies
   console.log('Installing root dependencies...');
   await runCommand('npm', ['install']);
-  
+
   // Frontend dependencies
   const frontendPath = path.join(process.cwd(), 'frontend');
   if (fs.existsSync(frontendPath)) {
     console.log('Installing frontend dependencies...');
     await runCommand('npm', ['install'], { cwd: frontendPath });
   }
-  
+
   // Service dependencies
   for (const service of services.slice(1, -1)) { // Skip hardhat and frontend
     if (fs.existsSync(service.cwd) && fs.existsSync(path.join(service.cwd, 'package.json'))) {
@@ -114,24 +134,24 @@ async function installDependencies() {
       await runCommand('npm', ['install'], { cwd: service.cwd });
     }
   }
-  
+
   console.log('✅ All dependencies installed!\n');
 }
 
 async function setupBlockchain() {
   console.log('⛓️  Setting up blockchain...\n');
-  
+
   // Compile contracts
   console.log('Compiling smart contracts...');
   await runCommand('npx', ['hardhat', 'compile']);
-  
+
   console.log('✅ Smart contracts compiled!\n');
 }
 
 async function createEnvFile() {
   const envPath = path.join(process.cwd(), '.env');
   const envExamplePath = path.join(process.cwd(), 'env.example');
-  
+
   if (!fs.existsSync(envPath) && fs.existsSync(envExamplePath)) {
     console.log('📄 Creating .env file from env.example...');
     fs.copyFileSync(envExamplePath, envPath);
@@ -176,16 +196,16 @@ function startService(service, index) {
 
 async function deployContracts() {
   console.log('🚀 Deploying smart contracts...\n');
-  
+
   try {
     await runCommand('npx', ['hardhat', 'run', 'scripts/deploy.js', '--network', 'localhost']);
     console.log('✅ Smart contracts deployed!\n');
-    
+
     // Seed data
     console.log('🌱 Seeding sample data...');
     await runCommand('npx', ['hardhat', 'run', 'scripts/seed-data.js', '--network', 'localhost']);
     console.log('✅ Sample data seeded!\n');
-    
+
   } catch (error) {
     console.log('❌ Contract deployment failed. This is expected if contracts are already deployed.');
     console.log('Continuing with service startup...\n');
@@ -195,30 +215,31 @@ async function deployContracts() {
 async function main() {
   try {
     console.log('🔧 Setting up environment...\n');
-    
+
     // Create .env file if it doesn't exist
     await createEnvFile();
-    
+
     // Install dependencies
     await installDependencies();
-    
+
     // Setup blockchain
     await setupBlockchain();
-    
+
     console.log('🎯 Starting services...\n');
     console.log('Services will start in the following order:');
     services.forEach((service, index) => {
       console.log(`  ${index + 1}. ${service.name} (Port: ${service.port})`);
     });
     console.log('');
-    
+
     // Start blockchain first
     console.log('Starting Hardhat blockchain node...');
     await startService(services[0], 0);
-    
+
     // Deploy contracts
     await deployContracts();
-    
+
+    // Start other services
     // Start other services
     for (let i = 1; i < services.length; i++) {
       const service = services[i];
@@ -229,7 +250,12 @@ async function main() {
         console.log(`⚠️  Skipping ${service.name} - directory not found`);
       }
     }
-    
+
+    // Wait for gRPC Payment Service
+    console.log("⏳ Waiting for gRPC Payment Server on port 50051...");
+    await waitForPort(50051);
+    console.log("💳 gRPC Payment server ready on port 50051");
+
     console.log('\n' + '='.repeat(80));
     console.log('🎉 ALL SERVICES STARTED SUCCESSFULLY! 🎉');
     console.log('='.repeat(80));
@@ -251,6 +277,7 @@ async function main() {
     console.log('  - Use Ctrl+C to stop all services');
     console.log('  - Check logs above for any service-specific errors');
     console.log('  - Make sure you have MongoDB running for database services');
+    console.log('  🧾 Payment gRPC Server:    localhost:50051');
     console.log('\n');
 
   } catch (error) {
