@@ -65,22 +65,28 @@ BlockBay/
 - Kubernetes / Minikube (optional)
 
 Install dependencies
+```
 npm install
-
+```
 Start local blockchain
+```
 cd contracts
 npx hardhat node
-
+```
 Compile & deploy smart contracts
+```
 npx hardhat compile
 npx hardhat run scripts/deploy.js --network localhost
-
+```
 Populate MongoDB sample data
+```
 cd scripts
 MONGODB_URI="<connection-string>" node populate-mongodb.js
-
+```
 Start backend services
+```
 node start-all-services.js
+```
 
 ## 🧠 Deep System Design
 ### 🏗 Architecture Overview
