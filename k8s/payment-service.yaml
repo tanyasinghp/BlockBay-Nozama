@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+  namespace: nozama
+  labels:
+    app: payment-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: payment-service
+  template:
+    metadata:
+      labels:
+        app: payment-service
+    spec:
+      containers:
+      - name: payment-service
+        image: taanyasinghp/payment-service:latest
+        ports:
+        - containerPort: 3005
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "3005"
+        - name: BLOCKCHAIN_RPC_URL
+          value: "http://hardhat-service:8545"
+        - name: CHAIN_ID
+          value: "31337"
+        - name: DEPLOYER_PRIVATE_KEY
+          value: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+        - name: MONGODB_URI
+          value: "mongodb://mongodb-service:27017/nozama-payment"
+        - name: CORS_ORIGIN
+          value: "http://localhost:3000,http://localhost:5173"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3005
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3005
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-service
+  namespace: nozama
+  labels:
+    app: payment-service
+spec:
+  selector:
+    app: payment-service
+  ports:
+  - port: 3005
+    targetPort: 3005
+  type: ClusterIP

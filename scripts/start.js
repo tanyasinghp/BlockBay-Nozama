@@ -2,6 +2,8 @@ const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
+require("dotenv").config({ path: path.join(__dirname, "..", "services/order-service/.env") });
+
 console.log('Starting Blockchain E-Commerce Order Service...\n');
 console.log('This will:');
 console.log('1. Install dependencies');

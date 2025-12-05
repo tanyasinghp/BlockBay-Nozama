@@ -82,6 +82,9 @@ class Database {
       }
 
       // Ping the database
+      if (!mongoose.connection.db) {
+        return { status: 'disconnected', details: 'No database connection found' };
+      }
       await mongoose.connection.db.admin().ping();
       
       return {

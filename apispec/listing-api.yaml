@@ -256,7 +256,6 @@ components:
           type: string
           format: date-time
           example: "2025-10-31T12:30:00Z"
-
     ListingCreateRequest:
       type: object
       required: [name, description, category, price, seller]
@@ -279,7 +278,6 @@ components:
           example: ["QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG"]
         seller:
           $ref: '#/components/schemas/Seller'
-
     ListingUpdateRequest:
       type: object
       properties:
@@ -294,7 +292,6 @@ components:
         status:
           type: string
           enum: [draft, published, archived]
-
     ListingList:
       type: object
       properties:
@@ -304,7 +301,6 @@ components:
             $ref: '#/components/schemas/Listing'
         pagination:
           $ref: '#/components/schemas/Pagination'
-
     Seller:
       type: object
       required:
@@ -323,7 +319,6 @@ components:
         verified:
           type: boolean
           example: true
-
     IPFSMetadata:
       type: object
       properties:
@@ -333,7 +328,6 @@ components:
         url:
           type: string
           example: "https://ipfs.io/ipfs/QmXnnyufdzAWL5CqZ2RnSNgPbvCc1ALT73s6epPrRnZ1Xy"
-
     IPFSImage:
       type: object
       properties:
@@ -341,7 +335,6 @@ components:
           type: string
         url:
           type: string
-
     BlockchainInfo:
       type: object
       properties:
@@ -354,7 +347,6 @@ components:
           type: string
         transactionHash:
           type: string
-
     Pagination:
       type: object
       properties:
@@ -366,7 +358,6 @@ components:
           type: integer
         resultsPerPage:
           type: integer
-
     Error:
       type: object
       properties:

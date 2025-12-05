@@ -41,9 +41,9 @@ router.post('/sync/:address', async (req: Request, res: Response) => {
     // Sync with blockchain
     const blockchainData = await blockchainService.syncWithBlockchain(address);
 
-    if (blockchainData && blockchainData.profile) {
+    if (blockchainData && blockchainData.identity) {
       // Update identity with blockchain data
-      if (blockchainData.profile.isVerified && !identity.verified) {
+      if (blockchainData.identity.verified && !identity.verified) {
         identity.verified = true;
         identity.verification = {
           status: 'verified',
@@ -54,11 +54,11 @@ router.post('/sync/:address', async (req: Request, res: Response) => {
       }
 
       // Update reputation score from blockchain if available
-      if (blockchainData.reputationScore !== null && blockchainData.reputationScore > 0) {
+      if (blockchainData.reputationScore !== null && blockchainData.reputationScore.score > 0) {
         identity.reputationScore = {
-          value: blockchainData.reputationScore,
+          value: blockchainData.reputationScore.score,
           algo: 'blockchain-v1',
-          confidence: 1.0
+          confidence: blockchainData.reputationScore.confidence
         };
       }
 

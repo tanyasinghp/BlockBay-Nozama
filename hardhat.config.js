@@ -9,7 +9,8 @@ module.exports = {
       optimizer: {
         enabled: true,
         runs: 200
-      }
+      },
+      viaIR: true
     }
   },
   networks: {
@@ -26,10 +27,9 @@ module.exports = {
     }
   },
   paths: {
-    sources: "./contracts",
+    sources: "./contracts/contracts",
     tests: "./test",
     cache: "./cache",
     artifacts: "./artifacts"
   }
 };
-

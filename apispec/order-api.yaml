@@ -69,7 +69,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'listing-api.yaml#/components/schemas/Error'
+                $ref: 'shared-components.yaml#/components/schemas/Error'
 
     post:
       tags: [Orders]
@@ -94,7 +94,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'listing-api.yaml#/components/schemas/Error'
+                $ref: 'shared-components.yaml#/components/schemas/Error'
 
   /orders/{orderId}:
     get:
@@ -119,7 +119,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'listing-api.yaml#/components/schemas/Error'
+                $ref: 'shared-components.yaml#/components/schemas/Error'
 
     put:
       tags: [Orders]
@@ -153,7 +153,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'listing-api.yaml#/components/schemas/Error'
+                $ref: 'shared-components.yaml#/components/schemas/Error'
 
   /orders/{orderId}/escrow/release:
     post:
@@ -179,7 +179,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'listing-api.yaml#/components/schemas/Error'
+                $ref: 'shared-components.yaml#/components/schemas/Error'
 
   /orders/{orderId}/escrow/refund:
     post:
@@ -205,7 +205,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'listing-api.yaml#/components/schemas/Error'
+                $ref: 'shared-components.yaml#/components/schemas/Error'
 
   /orders/{orderId}/fulfillment:
     post:
@@ -237,7 +237,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'listing-api.yaml#/components/schemas/Error'
+                $ref: 'shared-components.yaml#/components/schemas/Error'
 
 components:
   schemas:
@@ -248,11 +248,11 @@ components:
           type: string
           example: "1234543212345afsdas"
         listing:
-          $ref: 'listing-api.yaml#/components/schemas/Listing'
+          $ref: '#/components/schemas/Listing'
         buyer:
           $ref: '#/components/schemas/Participant'
         seller:
-          $ref: 'listing-api.yaml#/components/schemas/Seller'
+          $ref: '#/components/schemas/Seller'
         status:
           type: string
           enum: [pending, paid, shipped, delivered, cancelled, disputed, refunded]
@@ -268,7 +268,7 @@ components:
         fulfillment:
           $ref: '#/components/schemas/FulfillmentInfo'
         blockchain:
-          $ref: 'listing-api.yaml#/components/schemas/BlockchainInfo'
+          $ref: '#/components/schemas/BlockchainInfo'
         createdAt:
           type: string
           format: date-time
@@ -361,4 +361,119 @@ components:
           items:
             $ref: '#/components/schemas/Order'
         pagination:
-          $ref: 'listing-api.yaml#/components/schemas/Pagination'
+          $ref: '#/components/schemas/Pagination'
+
+    Listing:
+      type: object
+      properties:
+        listingId:
+          type: string
+          example: "lst_0x1234abcd5678ef90"
+        name:
+          type: string
+          example: "Limited Edition NFT Hoodie"
+        description:
+          type: string
+          example: "Premium cotton hoodie linked to NFT ownership"
+        category:
+          type: string
+          example: "fashion"
+        price:
+          type: number
+          format: float
+          example: 0.8
+        currency:
+          type: string
+          example: "ETH"
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/IPFSImage'
+        stock:
+          type: integer
+          example: 25
+        status:
+          type: string
+          enum: [draft, published, archived]
+          example: "published"
+        seller:
+          $ref: '#/components/schemas/Seller'
+        ipfsMetadata:
+          $ref: '#/components/schemas/IPFSMetadata'
+        blockchain:
+          $ref: '#/components/schemas/BlockchainInfo'
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-10-31T12:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-10-31T12:30:00Z"
+    Seller:
+      type: object
+      required:
+        - address
+        - name
+      properties:
+        address:
+          type: string
+          example: "0x1234abcd5678ef90"
+        name:
+          type: string
+          example: "Alice"
+        reputation:
+          type: integer
+          example: 85
+        verified:
+          type: boolean
+          example: true
+    IPFSMetadata:
+      type: object
+      properties:
+        cid:
+          type: string
+          example: "QmXnnyufdzAWL5CqZ2RnSNgPbvCc1ALT73s6epPrRnZ1Xy"
+        url:
+          type: string
+          example: "https://ipfs.io/ipfs/QmXnnyufdzAWL5CqZ2RnSNgPbvCc1ALT73s6epPrRnZ1Xy"
+    IPFSImage:
+      type: object
+      properties:
+        cid:
+          type: string
+        url:
+          type: string
+    BlockchainInfo:
+      type: object
+      properties:
+        network:
+          type: string
+          example: "Ethereum"
+        contractAddress:
+          type: string
+        tokenId:
+          type: string
+        transactionHash:
+          type: string
+    Pagination:
+      type: object
+      properties:
+        currentPage:
+          type: integer
+        totalPages:
+          type: integer
+        totalResults:
+          type: integer
+        resultsPerPage:
+          type: integer
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time

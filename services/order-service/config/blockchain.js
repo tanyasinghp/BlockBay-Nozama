@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Load deployment info
-const deploymentPath = path.join(__dirname, '../../../deployment.json');
+const deploymentPath = path.join(__dirname, '../../../contracts/deployments.json');
 let deployment = null;
 
 if (fs.existsSync(deploymentPath)) {
@@ -33,11 +33,19 @@ const getFreshWallet = () => {
 
 // Load contract ABIs
 const loadABI = (contractName) => {
-  const abiPath = path.join(__dirname, '../../../artifacts/contracts', `${contractName}.sol`, `${contractName}.json`);
+  // Try the main contracts artifacts directory first
+  let abiPath = path.join(__dirname, '../../../contracts/artifacts/contracts', `${contractName}.sol`, `${contractName}.json`);
+  
+  if (!fs.existsSync(abiPath)) {
+    // Fallback to local artifacts if they exist
+    abiPath = path.join(__dirname, '../artifacts/contracts', `${contractName}.sol`, `${contractName}.json`);
+  }
+  
   if (!fs.existsSync(abiPath)) {
     console.warn(`[WARN] ABI not found for ${contractName} at ${abiPath}`);
     return null;
   }
+  
   const contractJson = JSON.parse(fs.readFileSync(abiPath, 'utf8'));
   return contractJson.abi;
 };
@@ -52,25 +60,28 @@ if (deployment) {
   const escrowABI = loadABI('Escrow');
   const orderManagerABI = loadABI('OrderManager');
 
-  if (listingRegistryABI) {
+  if (listingRegistryABI && deployment.contracts.ListingRegistry) {
+    const listingAddress = deployment.contracts.ListingRegistry.address || deployment.contracts.ListingRegistry;
     listingRegistryContract = new ethers.Contract(
-      deployment.contracts.ListingRegistry,
+      listingAddress,
       listingRegistryABI,
       wallet
     );
   }
 
-  if (escrowABI) {
+  if (escrowABI && deployment.contracts.Escrow) {
+    const escrowAddress = deployment.contracts.Escrow.address || deployment.contracts.Escrow;
     escrowContract = new ethers.Contract(
-      deployment.contracts.Escrow,
+      escrowAddress,
       escrowABI,
       wallet
     );
   }
 
-  if (orderManagerABI) {
+  if (orderManagerABI && deployment.contracts.OrderManager) {
+    const orderManagerAddress = deployment.contracts.OrderManager.address || deployment.contracts.OrderManager;
     orderManagerContract = new ethers.Contract(
-      deployment.contracts.OrderManager,
+      orderManagerAddress,
       orderManagerABI,
       wallet
     );
@@ -86,4 +97,3 @@ module.exports = {
   orderManagerContract,
   deployment
 };
-

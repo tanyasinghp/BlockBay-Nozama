@@ -1,17 +1,19 @@
 // src/index.js
+require("dotenv").config();
+console.log("🔑 ENV LOADED - BUYER_PRIVATE_KEY =", process.env.BUYER_PRIVATE_KEY);
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const connectMongo = require('./config/database');
-require('dotenv').config();
 
 const escrowRoutes = require('./routes/escrow.routes');
 const { startIndexer } = require('./services/indexer');
+const startGrpcServer = require('../grpc/server');  // <-- ADD THIS
 
 const app = express();
 const PORT = process.env.PORT || 3005;
 
-app.use(cors());
+app.use(cors({ origin: '*' }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -42,12 +44,17 @@ app.use((err, req, res, next) => {
   try {
     const MONGODB_URI = process.env.MONGODB_URI;
     await connectMongo(MONGODB_URI);
+
     app.listen(PORT, () => {
       console.log(`Escrow Service listening on ${PORT}`);
     });
 
     // Start indexer (listen to on-chain events)
     startIndexer();
+
+    // 🚀 Start gRPC server
+    startGrpcServer();     // <-- CALL HERE
+
   } catch (err) {
     console.error('Failed to start Escrow Service:', err);
     process.exit(1);

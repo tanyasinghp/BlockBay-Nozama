@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package escrow;
+
+service EscrowService {
+  rpc CreateEscrow(CreateEscrowRequest) returns (EscrowResponse);
+  rpc ReleaseEscrow(EscrowIdRequest) returns (EscrowResponse);
+  rpc RefundEscrow(EscrowIdRequest) returns (EscrowResponse);
+
+  rpc StreamEscrowEvents(EscrowStreamRequest) returns (stream EscrowEvent);
+}
+
+message CreateEscrowRequest {
+  string orderId = 1;
+  string buyer = 2;
+  string seller = 3;
+  string amount = 4;
+}
+
+message EscrowIdRequest {
+  string escrowId = 1;
+}
+
+message EscrowResponse {
+  string status = 1;
+  string message = 2;
+  string escrowId = 3;
+}
+
+message EscrowStreamRequest {}
+
+message EscrowEvent {
+  string type = 1;
+  string escrowId = 2;
+  string updatedAt = 3;
+}

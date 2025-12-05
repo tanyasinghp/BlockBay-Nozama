@@ -3,6 +3,7 @@ import Identity from '../models/Identity';
 import Rating from '../models/Rating';
 import logger from '../utils/logger';
 import { validateDID, validateRating } from '../utils/validation';
+import blockchainService from '../services/blockchainService';
 
 const router = Router();
 
@@ -304,6 +305,102 @@ router.post('/recompute', async (req: Request, res: Response) => {
       error: {
         code: 'RECOMPUTE_ERROR',
         message: 'Failed to recompute reputation scores',
+        timestamp: new Date().toISOString()
+      }
+    });
+  }
+});
+
+/**
+ * POST /reputation/:did/sync
+ * Sync reputation data with blockchain
+ */
+router.post('/:did/sync', async (req: Request, res: Response) => {
+  try {
+    const { did } = req.params;
+
+    if (!validateDID(did)) {
+      return res.status(400).json({
+        error: {
+          code: 'INVALID_DID',
+          message: 'Invalid DID format',
+          timestamp: new Date().toISOString()
+        }
+      });
+    }
+
+    const identity = await Identity.findByDID(did);
+    if (!identity) {
+      return res.status(404).json({
+        error: {
+          code: 'IDENTITY_NOT_FOUND', 
+          message: 'Identity not found',
+          timestamp: new Date().toISOString()
+        }
+      });
+    }
+
+    // Sync with blockchain
+    const blockchainData = await blockchainService.syncWithBlockchain(identity.address);
+    
+    if (blockchainData) {
+      // Update local data with blockchain data
+      if (blockchainData.reputationScore) {
+        identity.reputationScore = {
+          value: blockchainData.reputationScore.score,
+          algo: blockchainData.reputationScore.algorithm,
+          confidence: blockchainData.reputationScore.confidence / 100 // Convert percentage to decimal
+        };
+      }
+
+      if (blockchainData.identity) {
+        identity.verified = blockchainData.identity.verified;
+        // Map verification status enum to our status strings
+        const statusMap = ['unverified', 'pending', 'verified', 'revoked'];
+        if (blockchainData.identity.verificationStatus < statusMap.length) {
+          if (!identity.verification) {
+            identity.verification = {
+              status: 'unverified' as any,
+              method: '',
+              verifier: '',
+              txHash: '',
+              blockNumber: 0,
+              verifiedAt: undefined
+            };
+          }
+          identity.verification.status = statusMap[blockchainData.identity.verificationStatus] as any;
+        }
+      }
+
+      await identity.save();
+      
+      res.json({
+        message: 'Successfully synced with blockchain',
+        syncData: blockchainData,
+        updatedIdentity: {
+          did: identity.did,
+          reputationScore: identity.reputationScore,
+          verified: identity.verified,
+          verification: identity.verification
+        },
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      res.status(503).json({
+        error: {
+          code: 'BLOCKCHAIN_UNAVAILABLE',
+          message: 'Blockchain service not available',
+          timestamp: new Date().toISOString()
+        }
+      });
+    }
+
+  } catch (error) {
+    logger.error('Error syncing reputation with blockchain:', error);
+    res.status(500).json({
+      error: {
+        code: 'SYNC_ERROR', 
+        message: 'Failed to sync with blockchain',
         timestamp: new Date().toISOString()
       }
     });
