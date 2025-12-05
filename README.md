@@ -94,9 +94,6 @@ BlockBay implements a blockchain-based decentralized e-commerce system with mode
 
 ## 🔌 Communication & Architecture Details
 
-<details>
-<summary><strong>Communication Structure</strong></summary>
-
 | **Pattern** | **Purpose** |
 |------------|-------------|
 | REST | Client-facing CRUD APIs |
@@ -108,34 +105,28 @@ BlockBay implements a blockchain-based decentralized e-commerce system with mode
 ### gRPC Example
 ```protobuf
 rpc CreateEscrow(CreateEscrowRequest) returns (EscrowResponse);
+```
+---
 
-
-<details>
-<summary><strong>🎯 Distributed Transaction Flow (Saga)</strong></summary>
+## 🎯 Distributed Transaction Flow (Saga)
 ### **Benefits**
 - Atomic workflow without central orchestrator
 - Protects against partial failures
-- Blockchain acts as a verifiable audit log
-
-</details>
+- Blockchain acts as verifiable audit log
 
 ---
 
-<details>
-<summary><strong>🧰 CQRS & Event Sourcing</strong></summary>
+## 🧰 CQRS & Event Sourcing
 
 | **Write Layer** | **Read Layer** |
 |------------------|----------------|
-| Blockchain — immutable source of truth | MongoDB — fast indexed search |
+| Blockchain: Immutable source of truth | MongoDB: Fast indexed search |
 | Smart contracts modifying state | Event-indexed projections |
 | Transactional accuracy | Query performance & analytics |
 
-</details>
-
 ---
 
-<details>
-<summary><strong>🔐 Smart Contracts</strong></summary>
+## 🔐 Smart Contracts
 
 | **Contract** | **Functionality** |
 |--------------|-------------------|
@@ -146,12 +137,9 @@ rpc CreateEscrow(CreateEscrowRequest) returns (EscrowResponse);
 
 📌 *Contract addresses are available in* `deployments.json`.
 
-</details>
-
 ---
 
-<details>
-<summary><strong>📡 Microservices Overview</strong></summary>
+## 📡 Microservices Overview
 
 | **Service** | **Responsibilities** |
 |-------------|----------------------|
@@ -161,36 +149,39 @@ rpc CreateEscrow(CreateEscrowRequest) returns (EscrowResponse);
 | `payment-service` | Escrow handling via gRPC |
 | `identity-reputation` | Ratings & trust model |
 
-</details>
 ---
 
 ## 🛠 Developer Commands
 Blockchain
+```
 cd contracts && npx hardhat node
 cd contracts && npx hardhat run scripts/deploy.js --network localhost
+```
 
 APIs
+```
 cd services/search-discovery && npm run dev
+```
 
 Docker
+```
 docker-compose up --build -d
+```
 
 Tests
+```
 cd contracts && npx hardhat test
+```
 
 🚧 Roadmap
+- Full marketplace frontend UI
+- Web3 wallet integration (MetaMask, WalletConnect)
+- Real-time updates via GraphQL subscriptions
+- Escrow dispute resolution process
+- Elasticsearch search engine
+- Analytics dashboards for sellers
 
-Full marketplace frontend UI
-
-Web3 wallet integration (MetaMask, WalletConnect)
-
-Real-time updates via GraphQL subscriptions
-
-Escrow dispute resolution process
-
-Elasticsearch search engine
-
-Analytics dashboards for sellers
+---
 
 🤝 Contributing
 git checkout -b feature/my-feature
@@ -200,17 +191,6 @@ git push origin feature/my-feature
 👥 Contributors
 
 Special thanks to the original development team behind the academic prototype.
-(Add contributor names here)
-
-📄 License
-
-This project is licensed under the MIT License. See LICENSE for full details.
-
-
-👥 Contributors
-
-Special thanks to the original development team behind the academic prototype.
-(Add contributor names here)
 
 📄 License
 
