@@ -34,6 +34,7 @@ Unlike traditional centralized marketplaces (Amazon / Flipkart / eBay), BlockBay
 
 ## 🏗 Project Structure
 
+```bash
 BlockBay/
 ├── apispec/                     # OpenAPI specifications
 ├── artifacts/                   # Hardhat build artifacts
@@ -52,7 +53,7 @@ BlockBay/
 ├── start-all-services.js
 ├── LICENSE
 └── README.md
-
+```
 
 ## ⚡ Quick Start
 
