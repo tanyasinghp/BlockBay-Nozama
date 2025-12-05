@@ -18,7 +18,7 @@ Unlike traditional centralized marketplaces (Amazon / Flipkart / eBay), BlockBay
 
 ---
 
-## ✨ Key Highlights
+## Key Highlights
 
 - 🔐 **Smart-contract Escrow** — Trustless automated payment flow
 - 📦 **Microservices Architecture** (5 core services)
@@ -32,7 +32,7 @@ Unlike traditional centralized marketplaces (Amazon / Flipkart / eBay), BlockBay
 
 ---
 
-## 🏗 Project Structure
+## Project Structure
 
 ```bash
 BlockBay/
@@ -55,7 +55,7 @@ BlockBay/
 └── README.md
 ```
 
-## ⚡ Quick Start
+## Quick Start
 
 ### **Prerequisites**
 - Node.js ≥ 18
@@ -88,8 +88,8 @@ Start backend services
 node start-all-services.js
 ```
 
-## 🧠 Deep System Design
-### 🏗 Architecture Overview
+## Deep System Design
+### Architecture Overview
 
 BlockBay implements a blockchain-based decentralized e-commerce system with modern microservices and event-driven patterns using:
 
@@ -99,7 +99,7 @@ BlockBay implements a blockchain-based decentralized e-commerce system with mode
 - REST / GraphQL / gRPC / Webhooks
 - MongoDB for query-layer optimization
 
-## 🔌 Communication & Architecture Details
+## Communication & Architecture Details
 
 | **Pattern** | **Purpose** |
 |------------|-------------|
@@ -115,7 +115,7 @@ rpc CreateEscrow(CreateEscrowRequest) returns (EscrowResponse);
 ```
 ---
 
-## 🎯 Distributed Transaction Flow (Saga)
+## Distributed Transaction Flow (Saga)
 ### **Benefits**
 - Atomic workflow without central orchestrator
 - Protects against partial failures
@@ -123,7 +123,7 @@ rpc CreateEscrow(CreateEscrowRequest) returns (EscrowResponse);
 
 ---
 
-## 🧰 CQRS & Event Sourcing
+## CQRS & Event Sourcing
 
 | **Write Layer** | **Read Layer** |
 |------------------|----------------|
@@ -133,7 +133,7 @@ rpc CreateEscrow(CreateEscrowRequest) returns (EscrowResponse);
 
 ---
 
-## 🔐 Smart Contracts
+## Smart Contracts
 
 | **Contract** | **Functionality** |
 |--------------|-------------------|
@@ -146,7 +146,7 @@ rpc CreateEscrow(CreateEscrowRequest) returns (EscrowResponse);
 
 ---
 
-## 📡 Microservices Overview
+## Microservices Overview
 
 | **Service** | **Responsibilities** |
 |-------------|----------------------|
@@ -158,7 +158,7 @@ rpc CreateEscrow(CreateEscrowRequest) returns (EscrowResponse);
 
 ---
 
-## 🛠 Developer Commands
+## Developer Commands
 Blockchain
 ```
 cd contracts && npx hardhat node
@@ -179,8 +179,9 @@ Tests
 ```
 cd contracts && npx hardhat test
 ```
+---
 
-🚧 Roadmap
+## 🚧 Roadmap
 - Full marketplace frontend UI
 - Web3 wallet integration (MetaMask, WalletConnect)
 - Real-time updates via GraphQL subscriptions
@@ -190,15 +191,19 @@ cd contracts && npx hardhat test
 
 ---
 
-🤝 Contributing
+## 🤝 Contributing
 git checkout -b feature/my-feature
 git commit -m "Add new feature"
 git push origin feature/my-feature
 
-👥 Contributors
+---
 
-Special thanks to the original development team behind the academic prototype.
+## 👥 Contributors
 
-📄 License
+Special thanks to the original development team and all contributors behind the project.
+
+---
+
+## 📄 License
 
 This project is licensed under the MIT License. See LICENSE for full details.
