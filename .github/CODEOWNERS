@@ -1,0 +1,27 @@
+# CODEOWNERS
+# Defines who must review and approve changes before merging into protected branches.
+# Pull requests affecting matched files will require review from the listed code owners.
+
+# Global ownership - requires approval from maintainers for any repository change
+*       @tanyasinghp @aaru02singh
+
+# Smart contracts ownership
+contracts/*        @tanyasinghp @aaru02singh
+
+# Microservices ownership
+services/search-discovery/*     @tanyasinghp @aaru02singh
+services/listing-service/*      @tanyasinghp @aaru02singh
+services/order-service/*        @tanyasinghp @aaru02singh
+services/payment-service/*      @tanyasinghp @aaru02singh
+services/identity-reputation/*  @tanyasinghp @aaru02singh
+
+# Scripts and deployment automation
+scripts/*           @tanyasinghp @aaru02singh
+deployment/*        @tanyasinghp @aaru02singh
+k8s/*               @tanyasinghp @aaru02singh
+
+# Documentation & specifications
+README.md           @tanyasinghp @aaru02singh
+apispec/*           @tanyasinghp @aaru02singh
+CONTRIBUTING.md     @tanyasinghp @aaru02singh
+ROADMAP.md          @tanyasinghp @aaru02singh
