@@ -99,6 +99,11 @@ BlockBay implements a blockchain-based decentralized e-commerce system with mode
 - REST / GraphQL / gRPC / Webhooks
 - MongoDB for query-layer optimization
 
+## 🏗 System Architecture
+Below is the high-level architecture of the BlockBay – Nozama decentralized marketplace.
+
+![BlockBay Architecture](docs/image.png)
+
 ## Communication & Architecture Details
 
 | **Pattern** | **Purpose** |
