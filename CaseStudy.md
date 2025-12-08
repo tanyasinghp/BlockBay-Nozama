@@ -1,10 +1,10 @@
-# 🧪 Case Studies & Related Work
+# Case Studies & Related Work
 
 This document highlights related decentralized marketplace and blockchain-powered e-commerce projects that inspired or informed the development of **BlockBay – Nozama**, along with the gaps observed and the opportunities BlockBay addresses.
 
 ---
 
-## 🔍 Overview of Comparable Open-Source and Research Projects
+## Overview of Comparable Open-Source and Research Projects
 
 ### 1. **Origin Protocol**
 **Link:** https://github.com/OriginProtocol/origin  
@@ -82,7 +82,7 @@ BlockBay incorporates DID-based identity, rating and reputation algorithms and e
 
 ---
 
-## 🧠 Summary of Identified Gaps
+## Summary of Identified Gaps
 
 | Existing Challenge | How BlockBay – Nozama Addresses It |
 |-------------------|-------------------------------------|
@@ -94,13 +94,13 @@ BlockBay incorporates DID-based identity, rating and reputation algorithms and e
 
 ---
 
-## 🧩 BlockBay – Nozama Value Proposition
+## BlockBay – Nozama Value Proposition
 
 > **BlockBay bridges the gap between fully decentralized anonymous marketplaces and traditional e-commerce by merging blockchain-based identity, transparent reputation scoring, secure transaction mechanisms, and practical marketplace workflows in a production-oriented architecture.**
 
 ---
 
-## 📚 References
+## References
 
 1. Origin Protocol – https://github.com/OriginProtocol/origin  
 2. OpenBazaar – https://github.com/OpenBazaar/OpenBazaar  
