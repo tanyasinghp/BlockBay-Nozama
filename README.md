@@ -36,7 +36,7 @@ Unlike traditional centralized marketplaces (Amazon / Flipkart / eBay), BlockBay
 
 ```bash
 BlockBay/
-├── apispec/                     # OpenAPI specifications
+├── apispec/                     
 ├── artifacts/                   # Hardhat build artifacts
 ├── contracts/                   # Solidity smart contracts + deployment scripts
 ├── deployment/                  # Kubernetes deployment automation scripts
