@@ -108,6 +108,3 @@ BlockBay incorporates DID-based identity, rating and reputation algorithms and e
 4. ResearchGate: Decentralized Marketplace Using Blockchain – https://www.researchgate.net/publication/345810649  
 5. Blockchain-Based Decentralized E-Commerce: Opportunities & Challenges – https://oa.upm.es/86863/2/86863.pdf  
 
----
-
-_Last updated: February 2025_
