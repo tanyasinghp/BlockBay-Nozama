@@ -1,4 +1,4 @@
-# SECURITY.md
+# Security Guidelines for People Who Prefer Systems Not Exploding
 
 Security is like plumbing. If you ignore it long enough, something bursts and everyone regrets it. To keep BlockBay-Nozama in working condition, we ask contributors and researchers to follow these guidelines:
 
