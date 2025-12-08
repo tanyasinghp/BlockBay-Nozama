@@ -1,4 +1,4 @@
-# CODE_OF_CONDUCT.md
+# Community Expectations for Humans With Keyboards
 
 This project survives on cooperation, curiosity, and the ability to disagree without turning the room into a bonfire. If you're here, you're part of a community that cares about decentralized tech, open code, and building things that don't collapse under the weight of one company's whims.
 
