@@ -1,8 +1,8 @@
 
 # ROADMAP.md
----
+
 A roadmap is a promise, not a prophecy. Here's what we aim to build, assuming contributors don't vanish into the void and the coffee doesn't run out.
----
+
 Phase 1: Core Functionality
 
 * Listing and purchasing items using decentralized transactions.
