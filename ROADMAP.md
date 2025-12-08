@@ -1,27 +1,8 @@
-A roadmap is a promise, not a prophecy. Here's what we aim to build, assuming contributors don't vanish into the void and the coffee doesn't run out.
-
-Phase 1: Core Functionality
-
-Listing and purchasing items using decentralized transactions.
-
-Wallet integration that doesn't make users cry.
-
-Basic seller pages and item details.
-
-Smart contract backbone for trustless commerce.
-
-Phase 2: Reputation and Trust
-
-On-chain reputation system that can't be gamed by sock puppets.
-
-Dispute resolution that doesn't involve verbal combat.
-
-Verified seller badges.
 
 # ROADMAP.md
-
+---
 A roadmap is a promise, not a prophecy. Here's what we aim to build, assuming contributors don't vanish into the void and the coffee doesn't run out.
-
+---
 Phase 1: Core Functionality
 
 * Listing and purchasing items using decentralized transactions.
